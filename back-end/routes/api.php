@@ -20,4 +20,9 @@ Route::prefix('/user')->group(function (){
     Route::post('/login', [authUserController::class, 'login']);
     Route::get('/resend-email-confirmation', [EmailController::class, 'resendConfirmation']);
     Route::get('/confirm-email', [EmailController::class, 'Confirmation']);
+    // password reset
+    Route::post('/check-email', [authUserController::class, 'check_email']);
+    Route::post('/send-reset-code', [EmailController::class, 'send_reset_code']);
+    Route::post('/confirme-code-reset-pass', [EmailController::class, 'confirme_code_reset_pass']);
+    Route::post('/reset-password', [authUserController::class, 'resetPassword']);
 });

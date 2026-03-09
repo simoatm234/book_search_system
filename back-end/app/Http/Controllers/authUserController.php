@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class authUserController extends Controller
@@ -113,7 +114,61 @@ class authUserController extends Controller
             ], 500);
         }
     }
-    public function resetPassword()  {
-        
+    public function check_email(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Email exists'
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'token' => 'required'
+        ]);
+
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $validated['email'])->where('token' , $validated['token'])
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid code'
+            ], 401);
+        }
+
+        if (!$record->confirmed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please verify your code first'
+            ], 400);
+        }
+        if ($record->updated) {
+            return response()->json([
+                'success' => false,
+                'message' => 'password alredy reset with this code '
+            ], 400);
+        }
+
+        // Update the user's password
+        $user = User::where('email', $validated['email'])->first();
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+        // update in password reset tabel
+        DB::table('password_reset_tokens')
+            ->where('email', $validated['email'])
+            ->update(['updated' => 1]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password successfully reset'
+        ]);
     }
 }

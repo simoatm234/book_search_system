@@ -1,70 +1,57 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, BookOpen } from 'lucide-react';
-import { useAuth } from '../../Services/App/slice/Dispatches/AuthDispatch';
-import { useSelector } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { BookOpen, Lock } from 'lucide-react';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
-import Notification from '../../components/Notification';
+import { Api } from '../../Services/App/Api';
 
 const schema = yup.object({
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Enter a valid email'),
   password: yup
     .string()
     .required('Password is required')
     .min(6, 'Password must be at least 6 characters'),
+  password_confirmation: yup
+    .string()
+    .required('Please confirm your password')
+    .oneOf([yup.ref('password')], 'Passwords do not match'),
 });
 
-export default function Login() {
-  const { login } = useAuth();
+export default function ResetPassword() {
   const { showMessage } = useNotif();
-  const { isAuth, token } = useSelector((state) => state.auth);
+  const location = useLocation();
   const navigate = useNavigate();
+  const email = location.state?.email;
+  const token = location.state?.token;
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     mode: 'onSubmit',
     resolver: yupResolver(schema),
   });
-  useEffect(() => {
-    if (isAuth && token) {
-      navigate('/SheckAuthPage');
-      showMessage({
-        message: 'user loged success',
-        type: 'success',
-      });
-    }
-  }, []);
-  const handelLogin = async (data) => {
+
+  const handelResetPassword = async (data) => {
     try {
-      const res = await login(data);
-      console.log(res);
-      if (res.error) {
+      const res = await Api.resetPassword({ ...data, email, token });
+      if (res.status == 200 || res.status == 201) {
         showMessage({
-          message: res.payload,
-          type: 'warning',
+          message: res.data.message || 'Password reset successfully',
+          type: 'success',
         });
-        return;
+        navigate('/login');
       }
-      showMessage({
-        message: 'Login successful',
-        type: 'success',
-      });
-      navigate('/SheckAuthPage');
     } catch (error) {
       showMessage({
-        message: error.message,
+        message: error?.response?.data?.message || 'Something went wrong',
         type: 'error',
       });
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F4F0E6] dark:bg-[#1A1208] relative overflow-hidden px-4 transition-colors duration-300">
       {/* Dot pattern */}
@@ -88,49 +75,25 @@ export default function Login() {
               <BookOpen className="text-[#8B5E3C] dark:text-[#C9A87C] w-8 h-8" />
             </div>
             <h1 className="text-2xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] tracking-tight">
-              Library Portal
+              Reset Password
             </h1>
-            <p className="text-sm text-[#A0856A] dark:text-[#8A6A4A] mt-1">
-              Sign in to access your shelf
+            <p className="text-sm text-[#A0856A] dark:text-[#8A6A4A] mt-1 text-center">
+              Enter your new password for{' '}
+              <span className="font-semibold text-[#8B5E3C] dark:text-[#C9A87C]">
+                {email}
+              </span>
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(handelLogin)} className="space-y-5">
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-[#2C1A0E] dark:text-[#C9A87C] uppercase tracking-widest">
-                Email
-              </label>
-              <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#F4F0E6] dark:bg-[#1A1208] transition-all
-                ${
-                  errors.email
-                    ? 'border-red-300 focus-within:ring-2 focus-within:ring-red-200'
-                    : 'border-[#DDD0B8] dark:border-[#4A3520] focus-within:ring-2 focus-within:ring-[#8B5E3C] dark:focus-within:ring-[#C9A87C] focus-within:border-transparent'
-                }`}
-              >
-                <Mail
-                  className={`w-4 h-4 flex-shrink-0 ${errors.email ? 'text-red-400' : 'text-[#8B5E3C] dark:text-[#C9A87C]'}`}
-                />
-                <input
-                  type="email"
-                  {...register('email')}
-                  placeholder="you@library.com"
-                  className="w-full bg-transparent outline-none text-[#2C1A0E] dark:text-[#F0E6D3] placeholder-[#C9A87C] dark:placeholder-[#5A3F25] text-sm"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-red-400 text-xs flex items-center gap-1 mt-0.5">
-                  <span>⚠</span> {errors.email.message}
-                </p>
-              )}
-            </div>
-
+          <form
+            onSubmit={handleSubmit(handelResetPassword)}
+            className="space-y-5"
+          >
             {/* Password */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-[#2C1A0E] dark:text-[#C9A87C] uppercase tracking-widest">
-                Password
+                New Password
               </label>
               <div
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#F4F0E6] dark:bg-[#1A1208] transition-all
@@ -157,41 +120,77 @@ export default function Login() {
               )}
             </div>
 
-            {/* Forgot password */}
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-xs font-medium text-[#8B5E3C] dark:text-[#C9A87C] hover:text-[#6B3F22] dark:hover:text-[#F0D0A0] hover:underline transition"
+            {/* Confirm Password */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[#2C1A0E] dark:text-[#C9A87C] uppercase tracking-widest">
+                Confirm Password
+              </label>
+              <div
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#F4F0E6] dark:bg-[#1A1208] transition-all
+                ${
+                  errors.password_confirmation
+                    ? 'border-red-300 focus-within:ring-2 focus-within:ring-red-200'
+                    : 'border-[#DDD0B8] dark:border-[#4A3520] focus-within:ring-2 focus-within:ring-[#8B5E3C] dark:focus-within:ring-[#C9A87C] focus-within:border-transparent'
+                }`}
               >
-                Forgot password?
-              </Link>
+                <Lock
+                  className={`w-4 h-4 flex-shrink-0 ${errors.password_confirmation ? 'text-red-400' : 'text-[#8B5E3C] dark:text-[#C9A87C]'}`}
+                />
+                <input
+                  type="password"
+                  {...register('password_confirmation')}
+                  placeholder="••••••••"
+                  className="w-full bg-transparent outline-none text-[#2C1A0E] dark:text-[#F0E6D3] placeholder-[#C9A87C] dark:placeholder-[#5A3F25] text-sm"
+                />
+              </div>
+              {errors.password_confirmation && (
+                <p className="text-red-400 text-xs flex items-center gap-1 mt-0.5">
+                  <span>⚠</span> {errors.password_confirmation.message}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] active:scale-95 text-[#FDFAF4] dark:text-[#1A1208] font-bold rounded-xl tracking-wide shadow-md transition duration-200"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 text-[#FDFAF4] dark:text-[#1A1208] font-bold rounded-xl tracking-wide shadow-md transition duration-200 flex items-center justify-center gap-2"
             >
-              Sign In
+              {isSubmitting ? (
+                <>
+                  <svg
+                    className="animate-spin w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
+                  </svg>
+                  Resetting...
+                </>
+              ) : (
+                'Reset Password'
+              )}
             </button>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#DDD0B8] dark:bg-[#4A3520]" />
-              <span className="text-xs text-[#C9A87C] dark:text-[#5A3F25] font-medium">
-                or
-              </span>
-              <div className="flex-1 h-px bg-[#DDD0B8] dark:bg-[#4A3520]" />
-            </div>
-
-            {/* Register */}
+            {/* Back to login */}
             <p className="text-center text-sm text-[#A0856A] dark:text-[#6A5040]">
-              Don't have an account?{' '}
               <Link
-                to="/register"
+                to="/login"
                 className="text-[#8B5E3C] dark:text-[#C9A87C] font-semibold hover:text-[#6B3F22] dark:hover:text-[#F0D0A0] hover:underline transition"
               >
-                Register here
+                ← Back to login
               </Link>
             </p>
           </form>
@@ -204,7 +203,6 @@ export default function Login() {
           </p>
         </div>
       </div>
-      <Notification />
     </div>
   );
 }

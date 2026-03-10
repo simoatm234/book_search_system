@@ -6,9 +6,7 @@ export const login = createAsyncThunk(
   'users/login',
   async (data, { rejectWithValue }) => {
     try {
-      console.log('data'.data);
       const response = await Api.login(data);
-      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -17,7 +15,8 @@ export const login = createAsyncThunk(
     }
   }
 );
-// login
+
+// me
 export const me = createAsyncThunk(
   'users/me',
   async (_, { rejectWithValue }) => {

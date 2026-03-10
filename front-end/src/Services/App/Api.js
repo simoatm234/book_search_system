@@ -20,7 +20,11 @@ export const Api = {
   logout: async (id) => await customAxios.post(`user/logout/${id}`),
 
   // Password Reset
-  checkEmail: async (data) => await customAxios.post('user/check-email', data),
+  checkEmail: async (data) => {
+    const res = await customAxios.post('user/check-email', data);
+    console.log(res);
+    return res;
+  },
   sendResetPasscode: async (data) =>
     await customAxios.post('user/send-reset-code', data),
   confirmCodeReset: async (data) =>

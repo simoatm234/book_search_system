@@ -49,13 +49,13 @@ class authUserController extends Controller
             ], 404);
         }
         //check if user alredy auth right now 
-        // if ($user->is_auth) {
-        //             return response()->json(
-        //                 [
-        //                     'message' => 'Your account alredy loged from outher device ',
-        //                     'reason' => $user->is_auth
-        //                 ], 403);
-        // }
+        if ($user->is_auth) {
+                    return response()->json(
+                        [
+                            'message' => 'Your account alredy loged from outher device ',
+                            'reason' => $user->is_auth
+                        ], 403);
+        }
         //revoke old tocen 
         $user->tokens()->delete();
         //create a new token 
@@ -123,13 +123,19 @@ class authUserController extends Controller
     }
     public function check_email(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email'
+        $validated = $request->validate([
+            'email' => 'required|email'
         ]);
+        $user = User::where('email' , $validated['email'])->first();
+        if(!$user){
+            return response()->json([
+                'success' => false,
+                'message' => 'Email not found'
+            ], 401);}
         return response()->json([
             'success' => true,
             'message' => 'Email exists'
-        ]);
+        ], 200);
     }
 
     public function resetPassword(Request $request)
@@ -141,7 +147,7 @@ class authUserController extends Controller
         ]);
 
         $record = DB::table('password_reset_tokens')
-            ->where('email', $validated['email'])->where('token' , $validated['token'])
+            ->where('email', $validated['email'])->where('token' , $validated['token'])->where('updated' ,0 )
             ->first();
 
         if (!$record) {

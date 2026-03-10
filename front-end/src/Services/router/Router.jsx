@@ -6,6 +6,11 @@ import DashBord from '../../pages/admin/DashBord';
 import Home from '../../pages/user/Home';
 import CheckAuthPage from '../../pages/auth/CheckAuthPage';
 import WelcomPage from '../../pages/WelcomPage';
+import Register from '../../pages/auth/Register';
+import AcountConfirmation from '../../pages/auth/AcountConfirmation';
+import ForgotPassword from '../../pages/auth/forgotPassword';
+import ConfirmeCode from '../../pages/auth/ConfirmeCode';
+import ResetPassword from '../../pages/auth/ResetPassword';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -42,5 +47,25 @@ export const router = createBrowserRouter([
   {
     path: '/SheckAuthPage',
     element: <CheckAuthPage />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
+  },
+  {
+    path: '/confirm-email/:token',
+    element: <AcountConfirmation />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword />,
+  },
+  {
+    path: '/Confirme-code',
+    element: <ConfirmeCode />,
+  },
+  {
+    path: '//reset-password',
+    element: <ResetPassword />,
   },
 ]);

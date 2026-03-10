@@ -63,17 +63,10 @@ class EmailController extends Controller
         $user->remember_token = null;
         $user->confirmed = 1;
         $user->save();
-        // Generate access token for auto-login 
-        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Email confirmed successfully!',
-            'data' => [
-                'user' => $user->only(['id', 'name', 'email']),
-                'access_token' => $token,
-                'token_type' => 'Bearer'
-            ]
         ]);
     }
     //  if token was expired

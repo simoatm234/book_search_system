@@ -2,7 +2,7 @@ import { customAxios } from './axios';
 
 export const Api = {
   getCsrfCookie: async () => await customAxios.get('sanctum/csrf-cookie'),
-
+  me: async () => await customAxios.get('user/me'),
   // Users
   fetchAllUsers: async () => await customAxios.get('user/all'),
   showUser: async (id) => await customAxios.get(`user/show/${id}`),

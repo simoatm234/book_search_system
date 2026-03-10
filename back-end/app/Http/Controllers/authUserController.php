@@ -14,6 +14,13 @@ use Illuminate\Support\Facades\Hash;
 class authUserController extends Controller
 {
     use AuthorizesRequests;
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            "user" => $request->user()
+        ]);
+    }
     
     public function login(LoginRequest $request)  {
         try {
@@ -42,13 +49,13 @@ class authUserController extends Controller
             ], 404);
         }
         //check if user alredy auth right now 
-        if ($user->is_auth) {
-                    return response()->json(
-                        [
-                            'message' => 'Your account alredy loged from outher device ',
-                            'reason' => $user->is_auth
-                        ], 403);
-        }
+        // if ($user->is_auth) {
+        //             return response()->json(
+        //                 [
+        //                     'message' => 'Your account alredy loged from outher device ',
+        //                     'reason' => $user->is_auth
+        //                 ], 403);
+        // }
         //revoke old tocen 
         $user->tokens()->delete();
         //create a new token 
@@ -60,7 +67,7 @@ class authUserController extends Controller
         //response
         return response()->json([
             'message' => 'user logged in successfully',
-            'admin' => $user->id,
+            'data' => $user,
             'token' => $token,
             'token_type' => 'Bearer'
         ], 200);

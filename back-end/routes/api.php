@@ -12,6 +12,7 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
         Route::get('/all', [UserController::class, 'index']);
         Route::put('/update/{user}', [UserController::class, 'update']);
         Route::delete('/delete/{user}', [UserController::class, 'destroy']);
+        Route::get('/me', [authUserController::class, 'me']);
         Route::post('/logout/{user}', [authUserController::class, 'logout']);
     });
 Route::prefix('/user')->group(function (){

@@ -1,14 +1,28 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { fetchAllUsers } from './AsyncThunks/UserThunks';
 const initialState = {
-  currentUser: {},
   ListUsers: {},
-  isAuth: false,
   loading: false,
   error: null,
 };
 export const UserSlice = createSlice({
-  name: 'admin-Slice',
+  name: 'user-Slice',
   initialState,
   reducers: {},
-  extraReducers: {},
+  extraReducers: (builder) => {
+    // users
+    builder
+      .addCase(fetchAllUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.ListUsers = action.payload;
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
 });

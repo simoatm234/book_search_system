@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Mail\confirmationMail;
+use App\Models\ResetPasswordCode;
 use App\Models\User;
 use App\Services\EmailService;
 use Carbon\Carbon;
@@ -120,17 +121,21 @@ class EmailController extends Controller
         $validator = $request->validate([
             'email' => 'required|email|exists:users,email',
         ]);
+        $user = User::where('email', $validator['email'])->first();
+
         $code = rand(100000, 999999); // 6-digit code
 
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $validator['email']],
+        ResetPasswordCode::updateOrCreate(
+            ['user_id' => $user->id],
             [
-                'token' => $code,
-                'expires_at' => Carbon::now()->addSecond(120) , 
-                'created_at' => Carbon::now()
+                'code' => $code,
+                'confirmed' => false,
+                'updated' => false,
+                'expires_at' => Carbon::now()->addMinutes(3),
+                'ip_address' => $request->ip(),
+                'updated_at' => Carbon::now(),
             ]
         );
-        $data['token_expires_at'] = Carbon::now()->addHours(24);
         $this->email_service->send_reset_pass_code($validator['email'] , $code);
 
         return response()->json([
@@ -144,12 +149,11 @@ class EmailController extends Controller
     {
         $validated = $request->validate([
             'email' => 'required|email',
-            'token' => 'required'
+            'code' => 'required'
         ]);
-
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $validated['email'])
-            ->where('token', $validated['token'])
+        $user = User::where('email', $validated['email'])->first();
+        $record = ResetPasswordCode::where('user_id', $user->id)
+            ->where('code', $validated['code'])
             ->first();
 
         if (!$record) {
@@ -168,17 +172,13 @@ class EmailController extends Controller
         }
 
         // token expired
-        if ($record->expires_at < Carbon::now()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token expired, try again'
-            ], 400);
+        if ($record->expires_at->isPast()) {
+            return response()->json(['success' => false, 'message' => 'Token expired'], 400);
         }
 
         // update confirmation
-        DB::table('password_reset_tokens')
-            ->where('email', $validated['email'])
-            ->update(['confirmed' => 1]);
+        $record->confirmed = true ;
+        $record->save();
 
         return response()->json([
             'success' => true,

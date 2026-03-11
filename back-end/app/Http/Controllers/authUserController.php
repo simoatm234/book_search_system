@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\ResetPasswordCode;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -143,11 +144,14 @@ class authUserController extends Controller
         $validated = $request->validate([
             'email' => 'required|email|exists:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'token' => 'required'
+            'code' => 'required'
         ]);
+        $user = User::where('email', $validated['email'])->first();
 
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $validated['email'])->where('token' , $validated['token'])->where('updated' ,0 )
+        // Find the specific reset record
+        $record = ResetPasswordCode::where('user_id', $user->id)
+            ->where('code', $validated['code'])
+            ->where('updated', 0)
             ->first();
 
         if (!$record) {
@@ -163,21 +167,13 @@ class authUserController extends Controller
                 'message' => 'Please verify your code first'
             ], 400);
         }
-        if ($record->updated) {
-            return response()->json([
-                'success' => false,
-                'message' => 'password alredy reset with this code '
-            ], 400);
-        }
 
-        // Update the user's password
-        $user = User::where('email', $validated['email'])->first();
+        // Update user's password
         $user->password = Hash::make($validated['password']);
         $user->save();
-        // update in password reset tabel
-        DB::table('password_reset_tokens')
-            ->where('email', $validated['email'])
-            ->update(['updated' => 1]);
+
+        // Mark only this reset record as updated
+        $record->update(['updated' => 1]);
 
         return response()->json([
             'success' => true,

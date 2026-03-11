@@ -50,4 +50,8 @@ class User extends Authenticatable
             'password' => 'hashed'
         ];
     }
+    public function resetCodes()
+    {
+        return $this->hasMany(ResetPasswordCode::class);
+    }
 }

@@ -6,9 +6,10 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 import { Api } from '../../Services/App/Api';
+import Notification from '../../components/Notification';
 
 const schema = yup.object({
-  token: yup
+  code: yup
     .string()
     .required('Code is required')
     .matches(/^\d{6}$/, 'Code must be exactly 6 digits'),
@@ -37,7 +38,7 @@ export default function ConfirmCode() {
           message: res.data.message || 'Code confirmed successfully',
           type: 'success',
         });
-        navigate('/reset-password', { state: { email, token: data.token } });
+        navigate('/reset-password', { state: { email, code: data.code } });
       }
     } catch (error) {
       showMessage({
@@ -94,7 +95,7 @@ export default function ConfirmCode() {
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
-                {...register('token')}
+                {...register('code')}
                 onInput={(e) => {
                   e.target.value = e.target.value
                     .replace(/\D/g, '')
@@ -160,7 +161,7 @@ export default function ConfirmCode() {
             </p>
           </form>
         </div>
-
+        <Notification/>
         {/* Footer */}
         <div className="bg-[#EDE4D3] dark:bg-[#1A1208] border-t border-[#DDD0B8] dark:border-[#4A3520] px-10 py-3 flex justify-center transition-colors duration-300">
           <p className="text-xs text-[#A0856A] dark:text-[#5A3F25] tracking-widest uppercase">

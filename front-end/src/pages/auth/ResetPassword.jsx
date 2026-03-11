@@ -7,6 +7,8 @@ import { BookOpen, Lock } from 'lucide-react';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 import { Api } from '../../Services/App/Api';
 
+import Notification from '../../components/Notification';
+
 const schema = yup.object({
   password: yup
     .string()
@@ -23,7 +25,7 @@ export default function ResetPassword() {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
-  const token = location.state?.token;
+  const code = location.state?.code;
 
   const {
     register,
@@ -36,7 +38,9 @@ export default function ResetPassword() {
 
   const handelResetPassword = async (data) => {
     try {
-      const res = await Api.resetPassword({ ...data, email, token });
+      console.log(data)
+      const res = await Api.resetPassword({ ...data, email, code });
+      console.log(res)
       if (res.status == 200 || res.status == 201) {
         showMessage({
           message: res.data.message || 'Password reset successfully',
@@ -195,7 +199,7 @@ export default function ResetPassword() {
             </p>
           </form>
         </div>
-
+        <Notification />
         {/* Footer */}
         <div className="bg-[#EDE4D3] dark:bg-[#1A1208] border-t border-[#DDD0B8] dark:border-[#4A3520] px-10 py-3 flex justify-center transition-colors duration-300">
           <p className="text-xs text-[#A0856A] dark:text-[#5A3F25] tracking-widest uppercase">

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\authUserController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\UserActionsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -11,9 +12,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
         Route::get('/all', [UserController::class, 'index']);
         Route::put('/update/{user}', [UserController::class, 'update']);
+        Route::put('/updatePass/{user}', [UserController::class, 'updatePass']);
         Route::delete('/delete/{user}', [UserController::class, 'destroy']);
         Route::get('/me', [authUserController::class, 'me']);
         Route::post('/logout/{user}', [authUserController::class, 'logout']);
+        Route::get('/actions', [UserActionsController::class, 'index']);
     });
 Route::prefix('/user')->group(function (){
     Route::post('/store',[UserController::class , 'store']);

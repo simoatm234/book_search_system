@@ -15,7 +15,7 @@ class UserServices
     }
     public function AllUsers()
     {
-        return User::all()->pagination(20);
+        return User::all();
     }
     public function storeUser(array $data)
     {

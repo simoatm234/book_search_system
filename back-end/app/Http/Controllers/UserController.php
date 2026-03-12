@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\updatePassRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Services\EmailService;
 use App\Services\UserServices;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -36,7 +39,7 @@ class UserController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $users
-            ]);
+            ],200);
         } catch (\Throwable $th) {
 
             return response()->json([
@@ -114,6 +117,51 @@ class UserController extends Controller
                 'success' => false,
                 'message' => 'Update failed',
                 'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+    public function updatePass(UpdatePassRequest $request, User $user)
+    {
+        try {
+            // Authorize the user
+            $this->authorize('update', $user);
+
+            // Verify current password
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'message' => 'Current password is incorrect',
+                    'status' => false,
+                ], 422);
+            }
+
+            // Prevent using same password
+            if (Hash::check($request->new_password, $user->password)) {
+                return response()->json([
+                    'message' => 'New password cannot be the same as current password',
+                    'status' => false,
+                ], 422);
+            }
+
+            // Update password
+            $user->update([
+                'password' => Hash::make($request->new_password),
+            ]);
+
+            return response()->json([
+                'message' => 'Password updated successfully',
+                'success' => true,
+                'data' => $user,
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => 'You are not authorized to update this password',
+                'status' => false,
+            ], 403);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'An error occurred while updating password',
+                'status' => false,
+                'error' => $th->getMessage(),
             ], 500);
         }
     }

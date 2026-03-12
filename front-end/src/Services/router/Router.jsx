@@ -11,6 +11,10 @@ import AcountConfirmation from '../../pages/auth/AcountConfirmation';
 import ForgotPassword from '../../pages/auth/forgotPassword';
 import ConfirmeCode from '../../pages/auth/ConfirmeCode';
 import ResetPassword from '../../pages/auth/ResetPassword';
+import Profile from '../../pages/admin/Profile';
+import AllUsers from '../../pages/admin/AllUsers';
+import StoreUser from '../../components/admin/StoreUser';
+import Actions from '../../pages/admin/Actions';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -21,6 +25,18 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <DashBord />,
+      },
+      {
+        path: 'profile',
+        element: <Profile />,
+      },
+      {
+        path: 'show/users',
+        element: <AllUsers />,
+      },
+      {
+        path: 'action/users',
+        element: <Actions />,
       },
     ],
   },

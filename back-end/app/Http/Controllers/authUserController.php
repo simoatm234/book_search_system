@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\ResetPasswordCode;
 use App\Models\User;
+use App\Services\UserActionsSevices;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,11 @@ use Illuminate\Support\Facades\Hash;
 class authUserController extends Controller
 {
     use AuthorizesRequests;
+    protected UserActionsSevices $user_actions;
+    public function __construct(UserActionsSevices $user_actions)
+    {
+        $this->user_actions  = $user_actions;
+    }
 
     public function me(Request $request)
     {
@@ -50,13 +56,13 @@ class authUserController extends Controller
             ], 404);
         }
         //check if user alredy auth right now 
-        if ($user->is_auth) {
-                    return response()->json(
-                        [
-                            'message' => 'Your account alredy loged from outher device ',
-                            'reason' => $user->is_auth
-                        ], 403);
-        }
+        // if ($user->is_auth) {
+        //             return response()->json(
+        //                 [
+        //                     'message' => 'Your account alredy loged from outher device ',
+        //                     'reason' => $user->is_auth
+        //                 ], 403);
+        // }
         //revoke old tocen 
         $user->tokens()->delete();
         //create a new token 
@@ -65,8 +71,10 @@ class authUserController extends Controller
         $user->is_auth = true;
         $user->last_login_at = Carbon::now();
         $user->save();
-        //response
-        return response()->json([
+            //store action
+            $this->user_actions->makeAction($user,'login', 'Login successful' ,[]);
+            //response
+            return response()->json([
             'message' => 'user logged in successfully',
             'data' => $user,
             'token' => $token,
@@ -86,6 +94,13 @@ class authUserController extends Controller
              $this->authorize('logout' ,$user);
              //check user if alredy logout
             if (!$user->is_auth) {
+                $this->user_actions->makeAction(
+                    $user,
+                    ' logout',
+                    'Failed to logout',
+                    ['reason' => 'duplicate  login'],
+                    'failed' 
+                );
                 return response()->json(
                     [
                         'message' => 'Your account alredy logedout  ',
@@ -108,6 +123,8 @@ class authUserController extends Controller
             $user->is_auth = false;
             $user->last_logout_at = Carbon::now();
             $user->save();
+            //store action
+            $this->user_actions->makeAction($user, 'logout', 'logout successful', []);
             //response
             return response()->json([
                 'message' => 'user logout in successfully',
@@ -141,43 +158,67 @@ class authUserController extends Controller
 
     public function resetPassword(Request $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'code' => 'required'
-        ]);
-        $user = User::where('email', $validated['email'])->first();
+       try {
+            $validated = $request->validate([
+                'email' => 'required|email|exists:users,email',
+                'password' => 'required|string|min:6|confirmed',
+                'code' => 'required'
+            ]);
+            $user = User::where('email', $validated['email'])->first();
 
-        // Find the specific reset record
-        $record = ResetPasswordCode::where('user_id', $user->id)
-            ->where('code', $validated['code'])
-            ->where('updated', 0)
-            ->first();
+            // Find the specific reset record
+            $record = ResetPasswordCode::where('user_id', $user->id)
+                ->where('code', $validated['code'])
+                ->where('updated', 0)
+                ->first();
 
-        if (!$record) {
+            if (!$record) {
+                $this->user_actions->makeAction(
+                    $user,
+                    'reset password',
+                    'Failed to reset password',
+                    ['reason' => 'Invalid code'],
+                    'failed' 
+                );
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid code'
+                ], 401);
+            }
+
+            if (!$record->confirmed) {
+                $this->user_actions->makeAction(
+                    $user,
+                    'reset password',
+                    'Failed to reset password',
+                    ['reason' => 'confirmation'],
+                    'failed' // optional status parameter
+                );
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please verify your code first'
+                ], 400);
+            }
+
+            // Update user's password
+            $user->password = Hash::make($validated['password']);
+            $user->save();
+
+            // Mark only this reset record as updated
+            $record->update(['updated' => 1]);
+            //store action
+            $this->user_actions->makeAction($user, 'reset password', 'password reseted successful', []);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password successfully reset'
+            ]);
+       } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid code'
-            ], 401);
-        }
-
-        if (!$record->confirmed) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please verify your code first'
-            ], 400);
-        }
-
-        // Update user's password
-        $user->password = Hash::make($validated['password']);
-        $user->save();
-
-        // Mark only this reset record as updated
-        $record->update(['updated' => 1]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Password successfully reset'
-        ]);
+                'message' => ' failed to reset password',
+                'error' => $th->getMessage()
+            ], 500);
+       }
     }
 }

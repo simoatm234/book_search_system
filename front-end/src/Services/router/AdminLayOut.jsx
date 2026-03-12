@@ -36,11 +36,14 @@ export default function AdminLayOut() {
   // handel logout
   const onLogout = async () => {
     try {
-      const res = await Api.logout(user.id);
-      if (res.status == 200 || res.status == 201) {
-        logout();
-        navigate('/login');
+      if (confirm('are you shur')) {
+        const res = await Api.logout(user.id);
+        if (res.status == 200 || res.status == 201) {
+          logout();
+          navigate('/login');
+        }
       }
+      return;
     } catch (error) {
       console.error(' logout failed :', error);
     }

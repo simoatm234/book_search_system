@@ -33,11 +33,14 @@ class UpdateUserRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($userId)
             ],
 
-            'password' => ['sometimes', 'string', 'min:6'],
-
+            
             'role' => [
                 'sometimes',
                 Rule::in(['admin', 'user'])
+            ],
+            'confirmed' => [
+                'sometimes',
+                'boolean'
             ],
         ];
     }
@@ -59,7 +62,6 @@ class UpdateUserRequest extends FormRequest
 
             'password.min' => 'Password must be at least 6 characters.',
 
-            'role.in' => 'Role must be either admin or user.',
 
             'confirmed.boolean' => 'Confirmed field must be true or false.'
         ];

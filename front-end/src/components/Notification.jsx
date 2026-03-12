@@ -5,15 +5,10 @@ import { useNotif } from '../Services/App/slice/Dispatches/NotifDispatch';
 export default function Notification() {
   const { message, type } = useSelector((state) => state.notification);
   const { clearMessage } = useNotif();
-  console.log(message);
-  useEffect(() => {
-    if (message) {
-        setTimeout(() => {
-          console.log('kanmhi')
-        clearMessage()
-      }, 3000);
-    }
-  }, []);
+
+  setTimeout(() => {
+    clearMessage();
+  }, 3000);
 
   if (!message) return null;
 
@@ -28,10 +23,14 @@ export default function Notification() {
   };
 
   return (
-    <div
-      className={`fixed top-5 right-5 z-100 z-50 px-4 py-3 rounded-xl border text-sm font-medium shadow-md max-w-xs transition-all duration-300 ${styles[type] ?? styles.info}`}
-    >
-      {message}
-    </div>
+    <>
+      {message && (
+        <div
+          className={`fixed top-5 right-5 z-100 z-50 px-4 py-3 rounded-xl border text-sm font-medium shadow-md max-w-xs transition-all duration-300 ${styles[type] ?? styles.info}`}
+        >
+          {message}
+        </div>
+      )}
+    </>
   );
 }

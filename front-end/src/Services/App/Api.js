@@ -5,10 +5,13 @@ export const Api = {
   me: async () => await customAxios.get('user/me'),
   // Users
   fetchAllUsers: async () => await customAxios.get('user/all'),
+  fetchAllActions: async () => await customAxios.get('user/actions'),
   showUser: async (id) => await customAxios.get(`user/show/${id}`),
   storeUser: async (data) => await customAxios.post('user/store', data),
-  updateUser: async (id, data) =>
+  updateUser: async ({ id, data }) =>
     await customAxios.put(`user/update/${id}`, data),
+  updateUserPass: async ({ id, data }) =>
+    await customAxios.put(`user/updatePass/${id}`, data),
   deleteUser: async (id) => await customAxios.delete(`user/delete/${id}`),
   confirmAccount: async (token) =>
     await customAxios.get('user/confirm-email', { params: { token } }),

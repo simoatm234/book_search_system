@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -9,6 +9,7 @@ import {
   BookOpen,
   LogOut,
   Menu,
+  ActivityIcon
 } from 'lucide-react';
 
 export default function SideBar({ user, onLogout }) {
@@ -40,13 +41,15 @@ export default function SideBar({ user, onLogout }) {
         },
         {
           id: 21,
-          name: 'store user',
-          path: '/admin/store/user',
-          icon: <UserPlus className="w-3.5 h-3.5" />,
+          name: 'user action',
+          path: '/admin/action/users',
+          icon: <ActivityIcon className="w-3.5 h-3.5" />,
         },
       ],
     },
   ];
+
+  const avatarLetter = user?.name?.charAt(0).toUpperCase() ?? '?';
 
   return (
     <>
@@ -107,7 +110,6 @@ export default function SideBar({ user, onLogout }) {
                       </span>
                       {item.name}
                     </div>
-
                     <ChevronDown
                       className={`w-4 h-4 text-[#A0856A] dark:text-[#6A5040] transition-transform duration-200 ${
                         isOpen ? 'rotate-180' : ''
@@ -119,7 +121,6 @@ export default function SideBar({ user, onLogout }) {
                     <div className="ml-4 mt-1 space-y-1 border-l-2 border-[#DDD0B8] dark:border-[#4A3520] pl-3">
                       {item.children.map((child) => {
                         const isChildActive = location.pathname === child.path;
-
                         return (
                           <Link
                             key={child.id}
@@ -164,29 +165,40 @@ export default function SideBar({ user, onLogout }) {
 
         {/* User Footer */}
         <div className="px-4 py-4 border-t border-[#DDD0B8] dark:border-[#4A3520]">
-          <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-[#EDE4D3] dark:bg-[#2C1F10] border border-[#DDD0B8] dark:border-[#4A3520]">
-            <div className="w-9 h-9 rounded-full bg-[#8B5E3C] dark:bg-[#C9A87C] flex items-center justify-center text-sm font-bold text-white dark:text-[#1A1208]">
-              {user?.name?.charAt(0).toUpperCase() ?? '?'}
-            </div>
+          {/* Profile Button Container */}
+          <div className="space-y-1">
+            {/* Profile Button - Navigate to Profile */}
+            <Link
+              to="/admin/profile"
+              onClick={() => setMobileOpen(false)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-t-xl border border-b-0 bg-[#EDE4D3] dark:bg-[#2C1F10] border-[#DDD0B8] dark:border-[#4A3520] hover:border-[#8B5E3C] dark:hover:border-[#C9A87C] transition-all duration-200"
+            >
+              {/* Avatar */}
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#8B5E3C] dark:bg-[#C9A87C] text-white dark:text-[#1A1208]">
+                {avatarLetter}
+              </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-[#2C1A0E] dark:text-[#F0E6D3] truncate">
-                {user?.name ?? 'Guest'}
-              </p>
-              <p className="text-xs text-[#A0856A] dark:text-[#6A5040] truncate capitalize">
-                {user?.role ?? 'No role'}
-              </p>
-            </div>
+              {/* Name & Role */}
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-xs font-semibold truncate text-[#2C1A0E] dark:text-[#F0E6D3]">
+                  {user?.name ?? 'Guest'}
+                </p>
+                <p className="text-xs truncate capitalize text-[#A0856A] dark:text-[#6A5040]">
+                  {user?.role ?? 'No role'}
+                </p>
+              </div>
+            </Link>
 
+            {/* Logout Button */}
             <button
-              onClick={onLogout}
-              className="w-8 h-8 rounded-lg flex items-center justify-center
-              text-[#8B5E3C] dark:text-[#C9A87C]
-              hover:bg-red-100 dark:hover:bg-red-900/30
-              hover:text-red-500 dark:hover:text-red-400
-              transition-all duration-200"
+              onClick={() => {
+                setMobileOpen(false);
+                onLogout();
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-b-xl border border-t-0 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all duration-200"
             >
               <LogOut className="w-4 h-4" />
+              <span className="text-xs font-medium">Logout</span>
             </button>
           </div>
         </div>

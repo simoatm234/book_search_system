@@ -50,6 +50,11 @@ class User extends Authenticatable
             'password' => 'hashed'
         ];
     }
+    // rolations
+    public function userActions()
+    {
+        return $this->belongsTo(UserActions::class);
+    }
     public function resetCodes()
     {
         return $this->hasMany(ResetPasswordCode::class);

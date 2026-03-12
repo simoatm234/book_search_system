@@ -4,10 +4,11 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, BookOpen } from 'lucide-react';
-import { useAuth } from '../../Services/App/slice/Dispatches/AuthDispatch';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { login } from '../../Services/App/slice/AsyncThunks/AuthThunks'; // Update path
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 import Notification from '../../components/Notification';
+import { useAuth } from './../../Services/App/slice/Dispatches/AuthDispatch';
 
 const schema = yup.object({
   email: yup
@@ -21,10 +22,12 @@ const schema = yup.object({
 });
 
 export default function Login() {
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const { showMessage } = useNotif();
-  const { isAuth, token } = useSelector((state) => state.auth);
+  const { me } = useAuth();
+  const { isAuth, token, loading, user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -33,38 +36,46 @@ export default function Login() {
     mode: 'onSubmit',
     resolver: yupResolver(schema),
   });
+
+  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuth && token) {
-      navigate('/SheckAuthPage');
-      showMessage({
-        message: 'user loged success',
-        type: 'success',
-      });
-    }
+    const checkAuth = async () => {
+      if (isAuth && token) {
+        await me();
+        if (user) {
+          navigate('/SheckAuthPage', { replace: true });
+        }
+        localStorage.removeItem('token');
+      }
+    };
+    checkAuth();
   }, []);
-  const handelLogin = async (data) => {
+
+  const handleLogin = async (data) => {
     try {
-      const res = await login(data);
-      console.log(res);
-      if (res.error) {
+      const result = await dispatch(login(data));
+
+      if (result.type === 'users/login/fulfilled') {
         showMessage({
-          message: res.payload,
+          message: 'Login successful',
+          type: 'success',
+        });
+        // Navigate to auth check page which routes based on user role
+        navigate('/SheckAuthPage', { replace: true });
+      } else {
+        showMessage({
+          message: result.payload || 'Login failed',
           type: 'warning',
         });
-        return;
       }
-      showMessage({
-        message: 'Login successful',
-        type: 'success',
-      });
-      navigate('/SheckAuthPage');
     } catch (error) {
       showMessage({
-        message: error.message,
+        message: error.message || 'An error occurred',
         type: 'error',
       });
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F4F0E6] dark:bg-[#1A1208] relative overflow-hidden px-4 transition-colors duration-300">
       {/* Dot pattern */}
@@ -96,7 +107,7 @@ export default function Login() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(handelLogin)} className="space-y-5">
+          <form onSubmit={handleSubmit(handleLogin)} className="space-y-5">
             {/* Email */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-[#2C1A0E] dark:text-[#C9A87C] uppercase tracking-widest">
@@ -170,9 +181,10 @@ export default function Login() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] active:scale-95 text-[#FDFAF4] dark:text-[#1A1208] font-bold rounded-xl tracking-wide shadow-md transition duration-200"
+              disabled={loading}
+              className="w-full py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 text-[#FDFAF4] dark:text-[#1A1208] font-bold rounded-xl tracking-wide shadow-md transition duration-200"
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
 
             {/* Divider */}

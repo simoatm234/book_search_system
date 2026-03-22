@@ -20,7 +20,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -50,17 +50,17 @@ class UserPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, User $model): bool
+    public function restore(User $authUser, User $user): bool
     {
-        return false;
+        return $authUser->id === $user->id || $authUser->role === 'admin';
     }
 
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, User $model): bool
+    public function forceDelete(User $authUser, User $user): bool
     {
-        return false;
+        return $authUser->id === $user->id || $authUser->role === 'admin';
     }
 
     public function logout(User $authUser, User $user): bool

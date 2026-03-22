@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests ;
     protected UserServices $userService;
     protected EmailService $email_service;
 
@@ -35,7 +35,26 @@ class UserController extends Controller
         try {
 
             $users = $this->userService->AllUsers();
+            
 
+            return response()->json([
+                'success' => true,
+                'data' => $users
+            ],200);
+        } catch (\Throwable $th) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch users',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+    public function indexTrashedUsers()
+    {
+        try {
+            $users = $this->userService->AllUsersTrashed();
+          
             return response()->json([
                 'success' => true,
                 'data' => $users
@@ -169,9 +188,51 @@ class UserController extends Controller
     /**
      * Delete user
      */
-    public function destroy(User $user)
+    public function destroy($id)
     {
         try {
+            // Find user including soft-deleted ones
+            $user = $this->userService->findUser($id);
+
+            // Authorize the force delete action
+            $this->authorize('forceDelete', $user);
+
+            // Force delete the user (permanently remove from database)
+            $user->forceDelete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User permanently deleted successfully',
+                'id' => $id
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to delete this user'
+            ], 403);
+        } catch (\Throwable $th) {
+            \Log::error('Force delete failed: ' . $th->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Delete failed',
+                'error' => config('app.debug') ? $th->getMessage() : null
+            ], 500);
+        }
+    }
+    /**
+     * Soft delete user (keeps record)
+     */
+    public function softDelete($id)
+    {
+        try {
+            // Find user including soft-deleted ones
+            $user = $this->userService->findUser($id);
 
             $this->authorize('delete', $user);
 
@@ -179,14 +240,46 @@ class UserController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'User deleted successfully'
-            ]);
+                'message' => 'User deactivated successfully',
+                'id' => $user->id
+            ], 200);
         } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate user',
+            ], 500);
+        }
+    }
+
+    /**
+     * Restore soft-deleted user
+     */
+    public function restore($id)
+    {
+        try {
+            //  find soft-deleted users
+            $user = $this->userService->findUserTrashed($id);
+
+            $this->authorize('restore', $user);
+
+            $user->restore();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User restored successfully',
+                'data' => $user
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deleted user not found with ID: ' . $id
+            ], 404);
+        } catch (\Throwable $th) {
+            \Log::error('Restore failed: ' . $th->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Delete failed',
-                'error' => $th->getMessage()
+                'message' => 'Failed to restore user'
             ], 500);
         }
     }

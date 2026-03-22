@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\authUserController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookFilesController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\UserActionsController;
 use App\Http\Controllers\UserController;
@@ -9,14 +11,30 @@ use Illuminate\Support\Facades\Route;
 
 //user router
 
-Route::middleware('auth:sanctum')->prefix('user')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::prefix('user')->group(function(){
         Route::get('/all', [UserController::class, 'index']);
+        Route::get('/all/trashed', [UserController::class, 'indexTrashedUsers']);
         Route::put('/update/{user}', [UserController::class, 'update']);
         Route::put('/updatePass/{user}', [UserController::class, 'updatePass']);
-        Route::delete('/delete/{user}', [UserController::class, 'destroy']);
+        Route::delete('/forceDelete/{user}', [UserController::class, 'destroy']);
+        Route::delete('/delete/{user}', [UserController::class, 'softDelete']);
+        Route::post('/restore/{id}', [UserController::class, 'restore']);
         Route::get('/me', [authUserController::class, 'me']);
         Route::post('/logout/{user}', [authUserController::class, 'logout']);
         Route::get('/actions', [UserActionsController::class, 'index']);
+    });
+        Route::prefix('books')->group(function () {
+            Route::get('/all' , [BookController::class , 'index']);
+            Route::get('/show/{book}' , [BookController::class , 'show']);
+        });
+  
+        Route::prefix('booksFiles')->group(function () {
+            Route::get('/all' , [BookFilesController::class , 'index']);
+            Route::get('/show/{book_files}' , [BookFilesController::class , 'show']);
+            Route::get('/file/{filename}', [BookController::class, 'getFile']);
+                });
     });
 Route::prefix('/user')->group(function (){
     Route::post('/store',[UserController::class , 'store']);
@@ -29,4 +47,9 @@ Route::prefix('/user')->group(function (){
     Route::post('/send-reset-code', [EmailController::class, 'send_reset_code']);
     Route::post('/confirme-code-reset-pass', [EmailController::class, 'confirme_code_reset_pass']);
     Route::post('/reset-password', [authUserController::class, 'resetPassword']);
+   
 });
+
+Route::get('booksFiles/{type}/{filename}', [BookController::class, 'getFile'])
+    ->where('type', 'cover|file')
+    ->name('booksFiles.getFile');

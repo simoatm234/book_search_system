@@ -15,6 +15,7 @@ import Profile from '../../pages/admin/Profile';
 import AllUsers from '../../pages/admin/AllUsers';
 import StoreUser from '../../components/admin/StoreUser';
 import Actions from '../../pages/admin/Actions';
+import AllBooks from '../../pages/admin/AllBooks';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: 'action/users',
         element: <Actions />,
+      },
+      {
+        path: 'books/all',
+        element: <AllBooks />,
       },
     ],
   },

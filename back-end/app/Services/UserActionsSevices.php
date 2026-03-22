@@ -7,7 +7,7 @@ use App\Models\UserActions;
 class UserActionsSevices 
 {
     public function allAction() {
-        return  $actions = UserActions::with('user')->latest()->get();
+        return  $actions = UserActions::all();
     }
     public function makeAction($user, string $action, ?string $description = null, array $metadata = [], string $status = 'success')
     {

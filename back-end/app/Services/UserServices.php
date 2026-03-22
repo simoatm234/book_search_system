@@ -15,7 +15,21 @@ class UserServices
     }
     public function AllUsers()
     {
-        return User::all();
+        return User::withoutTrashed()->get();
+    }
+    public function AllUsersTrashed()
+    {
+        return User::onlyTrashed()->get();
+    }
+
+    public function findUser($id)
+    {
+        return  User::withTrashed()->findOrFail($id);
+    }
+
+    public function findUserTrashed($id)
+    {
+        return  User::onlyTrashed()->find($id);
     }
     public function storeUser(array $data)
     {

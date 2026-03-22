@@ -7,7 +7,21 @@ export const fetchAllUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await Api.fetchAllUsers();
-      console.log(response.data);
+      console.log('normal',response.data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch users'
+      );
+    }
+  }
+);
+export const fetchAllUsersTrashed = createAsyncThunk(
+  'users/fetchAllUsersTrashed',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await Api.fetchAllUsersTrashed();
+      console.log('trashed',response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -31,6 +45,20 @@ export const fetchAllActions = createAsyncThunk(
   }
 );
 // Update users
+export const StoreUserFromAdmin = createAsyncThunk(
+  'users/StoreUserFromAdmin',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await Api.storeUser(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed update users'
+      );
+    }
+  }
+);
+// Update users
 export const UpdateUser = createAsyncThunk(
   'users/update',
   async ({ id, data }, { rejectWithValue }) => {
@@ -44,12 +72,51 @@ export const UpdateUser = createAsyncThunk(
     }
   }
 );
-// Update users
+// Update users pass
 export const updateUserPass = createAsyncThunk(
   'users/updatePass',
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await Api.updateUserPass({ id, data });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed update users'
+      );
+    }
+  }
+);
+export const ForcDropUser = createAsyncThunk(
+  'users/ForcDropUser',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await Api.forcDeleteUser(id);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed update users'
+      );
+    }
+  }
+);
+export const DropUser = createAsyncThunk(
+  'users/dropUser',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await Api.deleteUser(id);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed update users'
+      );
+    }
+  }
+);
+export const restorUser = createAsyncThunk(
+  'users/restorUser',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await Api.restorUser(id);
       return response.data;
     } catch (error) {
       return rejectWithValue(

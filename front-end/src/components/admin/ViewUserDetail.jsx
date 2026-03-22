@@ -11,7 +11,6 @@ import {
   Clock,
   Hash,
   AtSign,
-
   Globe,
   AlertCircle,
 } from 'lucide-react';
@@ -85,21 +84,24 @@ export default function ViewUserDetail({ id, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#231608] rounded-2xl shadow-xl max-w-3xl w-full my-8">
-        {/* Header */}
-        <div className="sticky top-0 bg-[#f5efe600] dark:bg-[#1A1208] border-b border-[#DDD0B8] dark:border-[#4A3520] p-4 sm:p-6 flex items-center justify-between rounded-t-2xl">
-       
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#231608] rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Sticky Header with Close Button */}
+        <div className="sticky top-0 bg-white dark:bg-[#231608] border-b border-[#DDD0B8] dark:border-[#4A3520] px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-20">
+          <h2 className="text-lg sm:text-xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3]">
+            User Details
+          </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-[#DDD0B8] dark:hover:bg-[#4A3520] rounded-lg transition-colors duration-200"
+            className="p-2 hover:bg-[#F5EFE6] dark:hover:bg-[#2C1F10] rounded-lg transition-colors duration-200 flex-shrink-0"
           >
-            <X className="w-5 h-5 text-[#A0856A] dark:text-[#8A6A4A]" />
+            <X className="w-5 h-5 text-[#8B5E3C] dark:text-[#C9A87C]" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4 sm:p-6 space-y-6">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           {/* Profile Header */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar */}
@@ -368,11 +370,11 @@ export default function ViewUserDetail({ id, onClose }) {
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="sticky bottom-0 bg-white dark:bg-[#231608] border-t border-[#DDD0B8] dark:border-[#4A3520] p-4 sm:p-6 flex justify-end gap-3 rounded-b-2xl">
+        {/* Sticky Footer Actions */}
+        <div className="sticky bottom-0 bg-white dark:bg-[#231608] border-t border-[#DDD0B8] dark:border-[#4A3520] px-4 sm:px-6 py-4 flex justify-end z-20">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-[#DDD0B8] dark:border-[#4A3520] bg-white dark:bg-[#231608] text-[#8B5E3C] dark:text-[#C9A87C] hover:bg-[#EDE4D3] dark:hover:bg-[#2C1F10] font-semibold rounded-xl transition-colors duration-200"
+            className="px-6 py-3 border border-[#DDD0B8] dark:border-[#4A3520] bg-white dark:bg-[#231608] text-[#8B5E3C] dark:text-[#C9A87C] hover:bg-[#F5EFE6] dark:hover:bg-[#2C1F10] font-semibold rounded-xl transition-colors duration-200"
           >
             Close
           </button>

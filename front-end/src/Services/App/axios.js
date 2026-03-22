@@ -8,6 +8,7 @@ export const customAxios = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
+  withCredentials: true,
 });
 
 customAxios.interceptors.request.use(

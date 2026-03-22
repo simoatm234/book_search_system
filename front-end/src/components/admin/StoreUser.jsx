@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Api } from '../../Services/App/Api';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
+import { useUser } from '../../Services/App/slice/Dispatches/UserDispatch';
 
 // Validation schema
 const userSchema = yup.object({
@@ -63,6 +64,7 @@ const userSchema = yup.object({
 export default function StoreUser() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { showMessage } = useNotif();
+  const { StoreUserFromAdmin } = useUser();
   const {
     register,
     handleSubmit,
@@ -84,31 +86,33 @@ export default function StoreUser() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await Api.storeUser(data);
-      if (res.status == 200 || res.status == 201) {
+      const res = await StoreUserFromAdmin(data);
+
+      // Check if the thunk was successful
+      if (res?.payload?.success) {
         showMessage({
-          message: res.data.message,
+          message: res?.payload?.message || 'User created successfully!',
           type: 'success',
         });
+
+        // Close modal and reset after success
+        setTimeout(() => {
+          setIsModalOpen(false);
+          reset();
+        }, 1500);
+      } else {
+        // Handle API error response
+        showMessage({
+          message: res?.payload?.message || 'Failed to create user',
+          type: 'error',
+        });
       }
-      setIsModalOpen(false);
-      reset();
     } catch (error) {
+      console.error('Error creating user:', error);
       showMessage({
-        message: error?.message || 'somtimse we get an errore pleas try again',
+        message: error?.message || 'Something went wrong, please try again',
         type: 'error',
       });
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800';
-      case 'librarian':
-        return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
-      default:
-        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800';
     }
   };
 

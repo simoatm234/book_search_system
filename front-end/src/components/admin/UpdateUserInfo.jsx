@@ -15,6 +15,8 @@ import {
   AtSign,
   Key,
 } from 'lucide-react';
+import { useUser } from '../../Services/App/slice/Dispatches/UserDispatch';
+import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 
 // Validation schema
 const updateUserSchema = yup.object({
@@ -69,6 +71,8 @@ const updateUserSchema = yup.object({
 
 export default function UpdateUserInfo({ id, onClose }) {
   const { users } = useSelector((state) => state.user);
+  const { UpdateUser } = useUser();
+  const { showMessage } = useNotif();
   const user = users?.find((u) => u.id === id);
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -114,7 +118,6 @@ export default function UpdateUserInfo({ id, onClose }) {
         username: data.username,
         email: data.email,
         role: data.role,
-        isAuth: data.isAuth,
         confirmed: data.confirmed,
       };
 
@@ -123,76 +126,69 @@ export default function UpdateUserInfo({ id, onClose }) {
         updateData.password = data.password;
       }
 
-      // Simulate API call - replace with actual update logic
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Updating user:', id, updateData);
+      // Pass the filtered updateData
+      const res = await UpdateUser({ id, data: updateData });
 
-      onClose();
-      reset();
+      if (res?.payload?.success) {
+        showMessage({
+          message: res?.payload?.message || 'User updated successfully!',
+          type: 'success',
+        });
+
+        // Close and reset after success
+        setTimeout(() => {
+          onClose();
+          reset();
+        }, 1500);
+
+        return res;
+      } else {
+        // Handle API error response
+        showMessage({
+          message: res?.payload?.message || 'Failed to update user',
+          type: 'error',
+        });
+      }
     } catch (error) {
       console.error('Error updating user:', error);
+      showMessage({
+        message:
+          error?.response?.data?.message ||
+          error?.message ||
+          'Failed to update user',
+        type: 'error',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getRoleColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'admin':
-        return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800';
-      default:
-        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800';
-    }
-  };
-
-  // Don't render anything if no user - but don't call onClose during render
   if (!user) {
-    return null; // Return null instead of showing error modal immediately
+    return null;
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#231608] rounded-2xl shadow-xl max-w-2xl w-full my-8">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-[#231608] border-b border-[#DDD0B8] dark:border-[#4A3520] p-4 sm:p-6 flex items-center justify-between rounded-t-2xl z-10">
-     
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#231608] rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Sticky Header with Close Button */}
+        <div className="sticky top-0 bg-white dark:bg-[#231608] border-b border-[#DDD0B8] dark:border-[#4A3520] px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-20">
+          <h2 className="text-lg sm:text-xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3]">
+            Update User Information
+          </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-[#DDD0B8] dark:hover:bg-[#4A3520] rounded-lg transition-colors duration-200 flex-shrink-0"
+            className="p-2 hover:bg-[#F5EFE6] dark:hover:bg-[#2C1F10] rounded-lg transition-colors duration-200 flex-shrink-0"
           >
-            <X className="w-5 h-5 text-[#A0856A] dark:text-[#8A6A4A]" />
+            <X className="w-5 h-5 text-[#8B5E3C] dark:text-[#C9A87C]" />
           </button>
         </div>
 
-        {/* Form */}
+        {/* Scrollable Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="p-4 sm:p-6 space-y-6"
+          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6"
         >
-          {/* Current User Info Preview */}
-          <div className="bg-[#F5EFE6] dark:bg-[#1A1208] rounded-xl p-4 border border-[#DDD0B8] dark:border-[#4A3520]">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8B5E3C] to-[#C9A87C] flex items-center justify-center text-lg font-bold text-white flex-shrink-0">
-                {user.name?.charAt(0).toUpperCase() || '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h3 className="text-sm font-bold text-[#2C1A0E] dark:text-[#F0E6D3] truncate">
-                    {user.name}
-                  </h3>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-semibold border capitalize whitespace-nowrap ${getRoleColor(user.role)}`}
-                  >
-                    {user.role}
-                  </span>
-                </div>
-                <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A] truncate">
-                  ID: #{user.id}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-[#8B5E3C] dark:text-[#C9A87C] uppercase tracking-widest">
@@ -300,7 +296,6 @@ export default function UpdateUserInfo({ id, onClose }) {
                   }`}
                 >
                   <option value="user">User</option>
-                  <option value="librarian">Librarian</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
@@ -315,30 +310,6 @@ export default function UpdateUserInfo({ id, onClose }) {
             {/* Status Toggles */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Auth Status */}
-              <div className="flex items-center gap-3 p-3 sm:p-4 bg-[#F5EFE6] dark:bg-[#1A1208] rounded-xl border border-[#DDD0B8] dark:border-[#4A3520]">
-                <div className="relative inline-block w-12 h-6">
-                  <input
-                    type="checkbox"
-                    {...register('isAuth')}
-                    className="peer sr-only"
-                    id="isAuth"
-                  />
-                  <label
-                    htmlFor="isAuth"
-                    className="absolute inset-0 cursor-pointer rounded-full bg-[#DDD0B8] dark:bg-[#4A3520] peer-checked:bg-emerald-600 transition-colors duration-200"
-                  >
-                    <span className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 peer-checked:translate-x-6" />
-                  </label>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-[#2C1A0E] dark:text-[#F0E6D3] truncate">
-                    Authorized
-                  </p>
-                  <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A] truncate">
-                    Can access system
-                  </p>
-                </div>
-              </div>
 
               {/* Confirmed Status */}
               <div className="flex items-center gap-3 p-3 sm:p-4 bg-[#F5EFE6] dark:bg-[#1A1208] rounded-xl border border-[#DDD0B8] dark:border-[#4A3520]">
@@ -448,8 +419,8 @@ export default function UpdateUserInfo({ id, onClose }) {
             )}
           </div>
 
-          {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#DDD0B8] dark:border-[#4A3520]">
+          {/* Sticky Form Actions */}
+          <div className="sticky bottom-0 bg-white dark:bg-[#231608] border-t border-[#DDD0B8] dark:border-[#4A3520] px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 z-20">
             <button
               type="submit"
               disabled={isLoading}

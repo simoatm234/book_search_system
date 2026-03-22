@@ -24,9 +24,24 @@ class authUserController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json([
-            "user" => $request->user()
-        ]);
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            return response()->json([
+                'user' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch user',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
     
     public function login(LoginRequest $request)  {
@@ -139,6 +154,7 @@ class authUserController extends Controller
             ], 500);
         }
     }
+  
     public function check_email(Request $request)
     {
         $validated = $request->validate([

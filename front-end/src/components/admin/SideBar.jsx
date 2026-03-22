@@ -9,7 +9,8 @@ import {
   BookOpen,
   LogOut,
   Menu,
-  ActivityIcon
+  ActivityIcon,
+  Book
 } from 'lucide-react';
 
 export default function SideBar({ user, onLogout }) {
@@ -45,6 +46,20 @@ export default function SideBar({ user, onLogout }) {
           path: '/admin/action/users',
           icon: <ActivityIcon className="w-3.5 h-3.5" />,
         },
+      ],
+    },
+    {
+      id: 3,
+      name: 'books',
+      icon: <Book className="w-4 h-4" />,
+      children: [
+        {
+          id: 30,
+          name: 'all books',
+          path: '/admin/books/all',
+          icon: <BookOpen className="w-3.5 h-3.5" />,
+        },
+       
       ],
     },
   ];

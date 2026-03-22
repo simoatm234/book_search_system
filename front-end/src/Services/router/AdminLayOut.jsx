@@ -7,9 +7,10 @@ import SideBar from '../../components/admin/SideBar';
 import NavBar from '../../components/admin/NavBar';
 import { Api } from '../App/Api';
 import Notification from '../../components/Notification';
+import Loading from '../../components/admin/Loading';
 
 export default function AdminLayOut() {
-  const { user, isAuth } = useSelector((state) => state.auth);
+  const { user, loading } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const { me, logout } = useAuth();
 
@@ -23,9 +24,15 @@ export default function AdminLayOut() {
       }
 
       try {
-        await Promise.all([me()]);
+        const response = await me();
+        if (!response.payload?.user) {
+          logout();
+          navigate('/login');
+        }
+        return;
       } catch (err) {
         console.error('Initialization failed:', err);
+        logout();
         navigate('/login');
       }
     };
@@ -33,6 +40,9 @@ export default function AdminLayOut() {
     initializeApp();
   }, []);
 
+  if (loading) {
+    return <Loading />;
+  }
   // handel logout
   const onLogout = async () => {
     try {

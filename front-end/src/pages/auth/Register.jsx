@@ -31,6 +31,10 @@ const schema = yup.object({
     .string()
     .required('Password is required')
     .min(6, 'Password must be at least 6 characters'),
+  password_confirmation: yup
+    .string()
+    .required('Please confirm your password')
+    .oneOf([yup.ref('password'), null], 'Passwords must match'),
 });
 
 export default function Register() {
@@ -222,6 +226,35 @@ export default function Register() {
               {errors.password && (
                 <p className="text-red-400 text-xs flex items-center gap-1 mt-0.5">
                   <span>⚠</span> {errors.password.message}
+                </p>
+              )}
+            </div>
+            {/* Password confirmation */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[#2C1A0E] dark:text-[#C9A87C] uppercase tracking-widest">
+                confirme Password
+              </label>
+              <div
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border bg-[#F4F0E6] dark:bg-[#1A1208] transition-all
+                ${
+                  errors.password
+                    ? 'border-red-300 focus-within:ring-2 focus-within:ring-red-200'
+                    : 'border-[#DDD0B8] dark:border-[#4A3520] focus-within:ring-2 focus-within:ring-[#8B5E3C] dark:focus-within:ring-[#C9A87C] focus-within:border-transparent'
+                }`}
+              >
+                <Lock
+                  className={`w-4 h-4 flex-shrink-0 ${errors.password_confirmation ? 'text-red-400' : 'text-[#8B5E3C] dark:text-[#C9A87C]'}`}
+                />
+                <input
+                  type="password"
+                  {...register('password_confirmation')}
+                  placeholder="••••••••"
+                  className="w-full bg-transparent outline-none text-[#2C1A0E] dark:text-[#F0E6D3] placeholder-[#C9A87C] dark:placeholder-[#5A3F25] text-sm"
+                />
+              </div>
+              {errors.password_confirmation && (
+                <p className="text-red-400 text-xs flex items-center gap-1 mt-0.5">
+                  <span>⚠</span> {errors.password_confirmation.message}
                 </p>
               )}
             </div>

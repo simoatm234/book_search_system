@@ -43,4 +43,8 @@ class Book extends Model
     {
         return $this->hasMany(book_files::class, 'book_id', 'id');
     }
+    public function UserBook()
+    {
+        return $this->hasMany(UserBook::class);
+    }
 }

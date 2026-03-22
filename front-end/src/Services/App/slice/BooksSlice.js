@@ -1,8 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { AllBooks } from './AsyncThunks/BooksThunks';
+import { AllBooks, AllUserBooks } from './AsyncThunks/BooksThunks';
 const initialState = {
   books: [],
   book: {},
+  UserBooks: [],
   loading: false,
 };
 export const BooksSlice = createSlice({
@@ -21,5 +22,17 @@ export const BooksSlice = createSlice({
     builder.addCase(AllBooks.rejected, (state) => {
       state.loading = false;
     });
+   
+    // all userBooks
+     builder.addCase(AllUserBooks.pending, (state) => {
+       state.loading = true;
+     });
+     builder.addCase(AllUserBooks.fulfilled, (state, action) => {
+       state.UserBooks = action.payload.data;
+       state.loading = false;
+     });
+     builder.addCase(AllUserBooks.rejected, (state) => {
+       state.loading = false;
+     });
   },
 });

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ShowBookInfo from '../../components/admin/ShowBookInfo';
+import { Api } from '../../Services/App/Api';
 
 export default function AllBooks() {
   const { allBooks } = useBook();
@@ -98,26 +99,33 @@ export default function AllBooks() {
   const notDownloadedBooks = totalBooks - downloadedBooks;
 
   // Handle download file
-  const handleDownloadFile = (fileUrl, fileName) => {
-    fetch(fileUrl)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      })
-      .catch((error) => {
-        console.error('Download failed:', error);
-        showMessage({
-          message: 'Failed to download file!',
-          type: 'error',
-        });
+  const handleDownloadFile = async (bookId, fileName) => {
+    try {
+      const response = await Api.setUserBookDownload(bookId);
+
+      const blob = response.data; // ✅ correct now
+
+      if (!blob || blob.size === 0) {
+        throw new Error('Empty file');
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName || 'book';
+      link.click();
+
+      showMessage({
+        message: 'Download started successfully!',
+        type: 'success',
       });
+    } catch (error) {
+      console.error(error);
+      showMessage({
+        message: 'Download failed!',
+        type: 'error',
+      });
+    }
   };
 
   // Handle show book
@@ -395,7 +403,7 @@ export default function AllBooks() {
                                   <button
                                     onClick={() =>
                                       handleDownloadFile(
-                                        fileUrl,
+                                        book.id,
                                         `${book.title}.${bookFile.file_format}`
                                       )
                                     }

@@ -10,7 +10,11 @@ import {
   FileText,
 } from 'lucide-react';
 
-export default function ShowBookInfo({ bookId, setCloseBook, handleDownloadFile }) {
+export default function ShowBookInfo({
+  bookId,
+  setCloseBook,
+  handleDownloadFile,
+}) {
   const { books } = useSelector((state) => state.books);
   const [book, setBook] = useState(null);
 
@@ -79,8 +83,7 @@ export default function ShowBookInfo({ bookId, setCloseBook, handleDownloadFile 
                 <button
                   onClick={() =>
                     handleDownloadFile(
-                      fileUrl,
-                      `${book.title}.${bookFile.file_format}`
+                      book.id , `${book.title}.${bookFile.file_format}`
                     )
                   }
                   className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] text-white dark:text-[#1A1208] font-medium rounded-lg transition"

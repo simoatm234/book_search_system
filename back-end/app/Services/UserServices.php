@@ -15,7 +15,11 @@ class UserServices
     }
     public function AllUsers()
     {
-        return User::withoutTrashed()->get();
+        return User::withoutTrashed()->with([
+            'userBooks' => function ($query) {
+                $query->with('book')->orderBy('action_at', 'desc');
+            }
+        ])->get();
     }
     public function AllUsersTrashed()
     {
@@ -24,13 +28,19 @@ class UserServices
 
     public function findUser($id)
     {
-        return  User::withTrashed()->findOrFail($id);
+        return  User::withTrashed()->with([
+            'userBooks' => function ($query) {
+                $query->with('book')->orderBy('action_at', 'desc');
+            }
+        ])->findOrFail($id);
     }
 
     public function findUserTrashed($id)
     {
         return  User::onlyTrashed()->find($id);
     }
+
+    
     public function storeUser(array $data)
     {
         $data = $this->hashPassword($data);

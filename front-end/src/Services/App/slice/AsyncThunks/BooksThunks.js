@@ -14,3 +14,16 @@ export const AllBooks = createAsyncThunk(
     }
   }
 );
+export const AllUserBooks = createAsyncThunk(
+  'Books/allUserBooks',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await Api.getAllUserBooks();
+      return res.data;
+    } catch (error) {
+         return rejectWithValue(
+           error.response?.data?.message || 'Failed to fetch books'
+         );
+    }
+  }
+);

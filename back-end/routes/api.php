@@ -5,6 +5,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookFilesController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\UserActionsController;
+use App\Http\Controllers\UserBookController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('books')->group(function () {
             Route::get('/all' , [BookController::class , 'index']);
             Route::get('/show/{book}' , [BookController::class , 'show']);
+
+            
+        Route::get('/user-books', [UserBookController::class, 'index']);
+
+        // // Get my books
+        // Route::get('/user-books/my-books', [UserBookController::class, 'myBooks']);
+
+        // Track actions
+        Route::post('/user-books/track-read', [UserBookController::class, 'trackRead']);
+        Route::post('/user-books/track-download/{bookId}', [UserBookController::class, 'trackDownload']);
+
+        // // Statistics
+        // Route::get('/user-books/statistics', [UserBookController::class, 'statistics']);
         });
   
         Route::prefix('booksFiles')->group(function () {

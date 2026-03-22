@@ -59,4 +59,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(ResetPasswordCode::class);
     }
+
+    public function userBooks()
+    {
+        return $this->hasMany(UserBook::class);
+    }
 }

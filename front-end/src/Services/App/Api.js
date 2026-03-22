@@ -49,4 +49,13 @@ export const Api = {
     await customAxios.get(`booksFiles/show/${bookFileId}`),
   getBookCover: async (filename) =>
     await customAxios.get(`booksFiles/cover/${filename}`),
+  getAllUserBooks: () => customAxios.get('books/user-books'),
+  setUserBookRead: (book_Id) =>
+    customAxios.post('books/user-books/track-read', book_Id),
+  setUserBookDownload: (book_Id) =>
+    customAxios.post(
+      `books/user-books/track-download/${book_Id}`,
+      {},
+      { responseType: 'blob' }
+    ),
 };

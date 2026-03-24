@@ -23,6 +23,7 @@ class Book extends Model
         'media_type',
         'gutendex_id',
         'download_count',
+        'reading_count',
         'formats',
     ];
 
@@ -41,10 +42,12 @@ class Book extends Model
      */
     public function files()
     {
-        return $this->hasMany(book_files::class, 'book_id', 'id');
+        return $this->hasOne(book_files::class)->latestOfMany();
     }
     public function UserBook()
     {
         return $this->hasMany(UserBook::class);
     }
+   
+   
 }

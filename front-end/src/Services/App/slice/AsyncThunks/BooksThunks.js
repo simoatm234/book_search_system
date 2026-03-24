@@ -27,3 +27,29 @@ export const AllUserBooks = createAsyncThunk(
     }
   }
 );
+export const getAllSubject = createAsyncThunk(
+  'Books/getAllSubject',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await Api.getAllSubject();
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch books'
+      );
+    }
+  }
+);
+export const getBySubject = createAsyncThunk(
+  'Books/getBySubject',
+  async (subject, { rejectWithValue }) => {
+    try {
+      const res = await Api.getBySubject(subject);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch books'
+      );
+    }
+  }
+);

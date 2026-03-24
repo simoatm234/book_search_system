@@ -8,12 +8,14 @@ import {
   Calendar,
   Download,
   FileText,
+  BookOpen,
 } from 'lucide-react';
 
 export default function ShowBookInfo({
   bookId,
   setCloseBook,
   handleDownloadFile,
+  handelReadBook,
 }) {
   const { books } = useSelector((state) => state.books);
   const [book, setBook] = useState(null);
@@ -33,10 +35,10 @@ export default function ShowBookInfo({
     return null;
   }
 
-  const hasFiles = book.files && book.files.length > 0;
-  const bookFile = hasFiles ? book.files[0] : null;
+  const hasFiles = book.files || book.files > 0;
+  const bookFile = hasFiles ? book.files : null;
   const baseUrl = import.meta.env.VITE_BACK_END_URL_IMAGE;
-
+  console.log('book file: ',bookFile)
   const coverUrl = bookFile?.cover_path
     ? `${baseUrl}storage/${bookFile.cover_path}`
     : book.formats?.['image/jpeg'];
@@ -80,17 +82,27 @@ export default function ShowBookInfo({
 
               {/* Download Button */}
               {fileUrl && (
-                <button
-                  onClick={() =>
-                    handleDownloadFile(
-                      book.id , `${book.title}.${bookFile.file_format}`
-                    )
-                  }
-                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] text-white dark:text-[#1A1208] font-medium rounded-lg transition"
-                >
-                  <Download className="w-5 h-5" />
-                  Download Book
-                </button>
+                <>
+                  <button
+                    onClick={() => handelReadBook(book.id)}
+                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] text-white dark:text-[#1A1208] font-medium rounded-lg transition"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    read Book
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleDownloadFile(
+                        book.id,
+                        `${book.title}.${bookFile.file_format}`
+                      )
+                    }
+                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] text-white dark:text-[#1A1208] font-medium rounded-lg transition"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download Book
+                  </button>
+                </>
               )}
             </div>
 

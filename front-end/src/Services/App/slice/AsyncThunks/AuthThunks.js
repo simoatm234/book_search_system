@@ -17,11 +17,11 @@ export const login = createAsyncThunk(
 );
 
 // me
-export const me = createAsyncThunk(
-  'users/me',
-  async (_, { rejectWithValue }) => {
+export const showUser = createAsyncThunk(
+  'users/showUser',
+  async (id, { rejectWithValue }) => {
     try {
-      const response = await Api.me();
+      const response = await Api.showUser(id);
 
       return response.data;
     } catch (error) {

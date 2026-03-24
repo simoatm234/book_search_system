@@ -17,6 +17,7 @@ import StoreUser from '../../components/admin/StoreUser';
 import Actions from '../../pages/admin/Actions';
 import AllBooks from '../../pages/admin/AllBooks';
 import AllUserBook from '../../pages/admin/AllUserBook';
+import ReadBook from '../../pages/admin/ReadBook';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
       {
         path: 'books/all',
         element: <AllBooks />,
+      },
+      {
+        path: 'books/read/:bookId',
+        element: <ReadBook />,
       },
       {
         path: 'books/user-book-action',

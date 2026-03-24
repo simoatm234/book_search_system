@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { login, me } from './AsyncThunks/AuthThunks';
+import { login, showUser } from './AsyncThunks/AuthThunks';
 
 const initialState = {
   user: null,
@@ -19,7 +19,7 @@ export const authSlice = createSlice({
       state.token = null;
       state.isAuth = false;
 
-      localStorage.removeItem('token');
+      localStorage.clear();
     },
 
     toggleDark: (state) => {
@@ -43,26 +43,26 @@ export const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuth = true;
         localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('userId', action.payload.data.id);
       })
 
       .addCase(login.rejected, (state) => {
         state.loading = false;
-       
       })
 
       // ME
-      .addCase(me.pending, (state) => {
+      .addCase(showUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
 
-      .addCase(me.fulfilled, (state, action) => {
+      .addCase(showUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data;
         state.isAuth = true;
       })
 
-      .addCase(me.rejected, (state, ) => {
+      .addCase(showUser.rejected, (state) => {
         state.loading = false;
         state.isAuth = false;
       });

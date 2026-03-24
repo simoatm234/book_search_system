@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Api } from '../../Services/App/Api';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
@@ -9,27 +9,25 @@ export default function AccountConfirmation() {
   const navigate = useNavigate();
   const { showMessage } = useNotif();
 
-  const [status, setStatus] = useState('verifying');
+  const [status, setStatus] = useState('verifying'); // verifying | success | error
   const [message, setMessage] = useState('');
   const [countdown, setCountdown] = useState(3);
+  const hasRun = useRef(false); // ✅ prevent multiple API calls in dev strict mode
 
   useEffect(() => {
-    let isCancelled = false; 
+    if (hasRun.current) return;
+    hasRun.current = true;
 
     const confirmAccount = async () => {
       if (!token) {
-        if (!isCancelled) {
-          setStatus('error');
-          setMessage('Invalid confirmation link');
-          setTimeout(() => navigate('/login'), 3000);
-        }
+        setStatus('error');
+        setMessage('Invalid confirmation link');
+        setTimeout(() => navigate('/login'), 3000);
         return;
       }
 
       try {
         const res = await Api.confirmAccount(token);
-
-        if (isCancelled) return; // ✅ Don't update state if unmounted
 
         if (res.status === 200 || res.status === 201) {
           setStatus('success');
@@ -40,13 +38,9 @@ export default function AccountConfirmation() {
             type: 'success',
           });
 
-          // Countdown timer
+          // countdown before redirect
           let count = 3;
           const timer = setInterval(() => {
-            if (isCancelled) {
-              clearInterval(timer);
-              return;
-            }
             count -= 1;
             setCountdown(count);
             if (count === 0) {
@@ -58,8 +52,6 @@ export default function AccountConfirmation() {
           throw new Error('Unexpected response status');
         }
       } catch (error) {
-        if (isCancelled) return;
-
         setStatus('error');
         const errorMessage =
           error?.response?.data?.message ||
@@ -77,15 +69,10 @@ export default function AccountConfirmation() {
     };
 
     confirmAccount();
-
-    //  Cleanup function
-    return () => {
-      isCancelled = true;
-    };
-  }, []); 
+  }, [token, navigate, showMessage]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F4F0E6] dark:bg-[#1A1208] relative overflow-hidden px-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-[#F4F0E6] dark:bg-[#1A1208] px-4 transition-colors duration-300">
       {/* Dot pattern background */}
       <div
         className="absolute inset-0 opacity-20 dark:opacity-10 pointer-events-none"
@@ -96,12 +83,12 @@ export default function AccountConfirmation() {
       />
 
       {/* Main Card */}
-      <div className="relative w-full max-w-md bg-[#FDFAF4] dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl shadow-xl dark:shadow-black/40 overflow-hidden transition-colors duration-300">
+      <div className="relative w-full max-w-md bg-[#FDFAF4] dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl shadow-xl overflow-hidden transition-colors duration-300">
         {/* Top accent bar */}
         <div className="h-1.5 w-full bg-[#8B5E3C] dark:bg-[#C9A87C]" />
 
         <div className="px-10 py-12">
-          {/* Logo Section */}
+          {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-[#EDE4D3] dark:bg-[#2C1F10] border border-[#C9A87C] dark:border-[#6B4423] flex items-center justify-center mb-4 shadow-sm">
               <BookOpen className="text-[#8B5E3C] dark:text-[#C9A87C] w-8 h-8" />
@@ -139,21 +126,36 @@ export default function AccountConfirmation() {
 
           {/* Message */}
           <p className="text-center text-[#A0856A] dark:text-[#8A6A4A] text-sm mb-6 leading-relaxed">
-            {status === 'verifying' &&
-              'Please wait while we verify your email address...'}
-            {status === 'success' && message}
-            {status === 'error' && message}
+            {status === 'verifying'
+              ? 'Please wait while we verify your email address...'
+              : message}
           </p>
 
-          {/* Success Content */}
-          {status === 'success' && (
+          {/* Success / Error Actions */}
+          {(status === 'success' || status === 'error') && (
             <div className="space-y-4">
-              <div className="bg-[#EDE4D3] dark:bg-[#2C1F10] border border-[#C9A87C] dark:border-[#6B4423] rounded-xl p-4">
-                <p className="text-sm text-[#2C1A0E] dark:text-[#C9A87C] text-center font-medium">
+              <div
+                className={`rounded-xl p-4 text-center border ${
+                  status === 'success'
+                    ? 'bg-[#EDE4D3] border-[#C9A87C]'
+                    : 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-800'
+                }`}
+              >
+                <p
+                  className={`text-sm font-medium ${
+                    status === 'success'
+                      ? 'text-[#2C1A0E] dark:text-[#C9A87C]'
+                      : 'text-red-800 dark:text-red-300'
+                  }`}
+                >
                   Redirecting to login in{' '}
-                  <span className="text-[#8B5E3C] dark:text-[#F0D0A0] font-bold text-lg">
-                    {countdown}
-                  </span>{' '}
+                  {status === 'success' ? (
+                    <span className="text-[#8B5E3C] dark:text-[#F0D0A0] font-bold text-lg">
+                      {countdown}
+                    </span>
+                  ) : (
+                    '5'
+                  )}{' '}
                   seconds...
                 </p>
               </div>
@@ -163,24 +165,6 @@ export default function AccountConfirmation() {
                 className="w-full py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] active:scale-95 text-[#FDFAF4] dark:text-[#1A1208] font-bold rounded-xl tracking-wide shadow-md transition duration-200"
               >
                 Go to Login Now
-              </button>
-            </div>
-          )}
-
-          {/* Error Content */}
-          {status === 'error' && (
-            <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-4">
-                <p className="text-sm text-red-800 dark:text-red-300 text-center font-medium">
-                  Redirecting to login in 5 seconds...
-                </p>
-              </div>
-
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] active:scale-95 text-[#FDFAF4] dark:text-[#1A1208] font-bold rounded-xl tracking-wide shadow-md transition duration-200"
-              >
-                Go to Login
               </button>
             </div>
           )}

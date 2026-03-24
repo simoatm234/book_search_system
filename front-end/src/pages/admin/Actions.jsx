@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useUser } from '../../Services/App/slice/Dispatches/UserDispatch';
 import { useSelector } from 'react-redux';
 import {
@@ -10,9 +10,15 @@ import {
   Smartphone,
   Monitor,
   Clock,
-  Download,
   User,
   Link as LinkIcon,
+  Filter,
+  X,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Calendar,
+  Eye,
 } from 'lucide-react';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 
@@ -23,6 +29,9 @@ export default function Actions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [filterAction, setFilterAction] = useState('all');
+  const [filterMethod, setFilterMethod] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -46,9 +55,25 @@ export default function Actions() {
     fetchActions();
   }, []);
 
-  // Filter actions based on search and date range
-  const filteredActions =
-    actions?.filter((action) => {
+  // Extract unique action types, methods, statuses for filters
+  const uniqueActions = useMemo(
+    () => [...new Set(actions?.map((a) => a.action).filter(Boolean))],
+    [actions]
+  );
+  const uniqueMethods = useMemo(
+    () => [...new Set(actions?.map((a) => a.method).filter(Boolean))],
+    [actions]
+  );
+  const uniqueStatuses = useMemo(
+    () => [...new Set(actions?.map((a) => a.status).filter(Boolean))],
+    [actions]
+  );
+
+  // Filter actions
+  const filteredActions = useMemo(() => {
+    if (!actions) return [];
+
+    return actions.filter((action) => {
       const matchesSearch =
         action.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         action.ip_address?.includes(searchTerm) ||
@@ -59,10 +84,33 @@ export default function Actions() {
       const actionDate = new Date(action.created_at);
       const matchesDateRange =
         (!dateRange.start || actionDate >= new Date(dateRange.start)) &&
-        (!dateRange.end || actionDate <= new Date(dateRange.end));
+        (!dateRange.end || actionDate <= new Date(dateRange.end + 'T23:59:59')); // include whole end day
 
-      return matchesSearch && matchesDateRange;
-    }) || [];
+      const matchesActionType =
+        filterAction === 'all' || action.action === filterAction;
+
+      const matchesMethod =
+        filterMethod === 'all' || action.method === filterMethod;
+
+      const matchesStatus =
+        filterStatus === 'all' || action.status === filterStatus;
+
+      return (
+        matchesSearch &&
+        matchesDateRange &&
+        matchesActionType &&
+        matchesMethod &&
+        matchesStatus
+      );
+    });
+  }, [
+    actions,
+    searchTerm,
+    dateRange,
+    filterAction,
+    filterMethod,
+    filterStatus,
+  ]);
 
   // Pagination
   const totalPages = Math.ceil(filteredActions.length / itemsPerPage);
@@ -71,11 +119,43 @@ export default function Actions() {
     currentPage * itemsPerPage
   );
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, dateRange, filterAction, filterMethod, filterStatus]);
+
   const getDeviceIcon = (userAgent) => {
     if (!userAgent) return <Monitor className="w-4 h-4" />;
     if (userAgent.toLowerCase().includes('mobile'))
       return <Smartphone className="w-4 h-4" />;
     return <Monitor className="w-4 h-4" />;
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'success':
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+            <CheckCircle className="w-3 h-3" />
+            <span className="text-xs font-medium">Success</span>
+          </div>
+        );
+      case 'error':
+      case 'failed':
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
+            <XCircle className="w-3 h-3" />
+            <span className="text-xs font-medium">Error</span>
+          </div>
+        );
+      default:
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-800">
+            <AlertCircle className="w-3 h-3" />
+            <span className="text-xs font-medium">{status || 'Unknown'}</span>
+          </div>
+        );
+    }
   };
 
   const formatDate = (dateString) => {
@@ -89,6 +169,22 @@ export default function Actions() {
       second: '2-digit',
     }).format(date);
   };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setDateRange({ start: '', end: '' });
+    setFilterAction('all');
+    setFilterMethod('all');
+    setFilterStatus('all');
+  };
+
+  const hasActiveFilters =
+    searchTerm ||
+    dateRange.start ||
+    dateRange.end ||
+    filterAction !== 'all' ||
+    filterMethod !== 'all' ||
+    filterStatus !== 'all';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FDFAF4] via-[#F9F4ED] to-[#F5EFE6] dark:from-[#0F0A05] dark:via-[#1A1208] dark:to-[#231608] p-4 sm:p-6 transition-colors duration-300">
@@ -119,8 +215,8 @@ export default function Actions() {
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          {/* Advanced Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0856A] dark:text-[#8A6A4A]" />
@@ -135,17 +231,83 @@ export default function Actions() {
 
             {/* Date Range */}
             <div className="flex gap-2">
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) =>
-                  setDateRange((prev) => ({ ...prev, start: e.target.value }))
-                }
-                className="flex-1 px-3 py-2 bg-white dark:bg-[#1A1208] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl text-sm text-[#2C1A0E] dark:text-[#F0E6D3] focus:outline-none focus:border-[#8B5E3C] dark:focus:border-[#C9A87C] transition-colors duration-200"
-                placeholder="Start date"
-              />
+              <div className="relative flex-1">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0856A] dark:text-[#8A6A4A]" />
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({ ...prev, start: e.target.value }))
+                  }
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#1A1208] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl text-sm text-[#2C1A0E] dark:text-[#F0E6D3] focus:outline-none focus:border-[#8B5E3C] dark:focus:border-[#C9A87C] transition-colors duration-200"
+                  placeholder="Start date"
+                />
+              </div>
+            
+            </div>
+
+            {/* Action Type Filter */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0856A] dark:text-[#8A6A4A]" />
+                <select
+                  value={filterAction}
+                  onChange={(e) => setFilterAction(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2 bg-white dark:bg-[#1A1208] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl text-sm text-[#2C1A0E] dark:text-[#F0E6D3] focus:outline-none focus:border-[#8B5E3C] dark:focus:border-[#C9A87C] transition-colors duration-200 appearance-none"
+                >
+                  <option value="all">All Actions</option>
+                  {uniqueActions.map((action) => (
+                    <option key={action} value={action}>
+                      {action}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative flex-1">
+                <select
+                  value={filterMethod}
+                  onChange={(e) => setFilterMethod(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-[#1A1208] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl text-sm text-[#2C1A0E] dark:text-[#F0E6D3] focus:outline-none focus:border-[#8B5E3C] dark:focus:border-[#C9A87C] transition-colors duration-200 appearance-none"
+                >
+                  <option value="all">All Methods</option>
+                  {uniqueMethods.map((method) => (
+                    <option key={method} value={method}>
+                      {method}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative flex-1">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-[#1A1208] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl text-sm text-[#2C1A0E] dark:text-[#F0E6D3] focus:outline-none focus:border-[#8B5E3C] dark:focus:border-[#C9A87C] transition-colors duration-200 appearance-none"
+                >
+                  <option value="all">All Statuses</option>
+                  {uniqueStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#8B5E3C] dark:text-[#C9A87C] hover:bg-[#F5EFE6] dark:hover:bg-[#1A1208] rounded-lg transition-colors duration-200"
+              >
+                <X className="w-4 h-4" />
+                Clear all filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Actions Table */}
@@ -172,17 +334,22 @@ export default function Actions() {
                   </th>
                   <th className="px-4 lg:px-6 py-4 text-left">
                     <span className="text-xs font-semibold text-[#8B5E3C] dark:text-[#C9A87C] uppercase tracking-widest">
+                      Method
+                    </span>
+                  </th>
+                  <th className="px-4 lg:px-6 py-4 text-left">
+                    <span className="text-xs font-semibold text-[#8B5E3C] dark:text-[#C9A87C] uppercase tracking-widest">
+                      Status
+                    </span>
+                  </th>
+                  <th className="px-4 lg:px-6 py-4 text-left">
+                    <span className="text-xs font-semibold text-[#8B5E3C] dark:text-[#C9A87C] uppercase tracking-widest">
                       Description
                     </span>
                   </th>
                   <th className="px-4 lg:px-6 py-4 text-left">
                     <span className="text-xs font-semibold text-[#8B5E3C] dark:text-[#C9A87C] uppercase tracking-widest">
                       IP & Device
-                    </span>
-                  </th>
-                  <th className="px-4 lg:px-6 py-4 text-left">
-                    <span className="text-xs font-semibold text-[#8B5E3C] dark:text-[#C9A87C] uppercase tracking-widest">
-                      URL
                     </span>
                   </th>
                   <th className="px-4 lg:px-6 py-4 text-left">
@@ -217,6 +384,14 @@ export default function Actions() {
                       </span>
                     </td>
                     <td className="px-4 lg:px-6 py-4">
+                      <span className="text-xs font-mono bg-[#EDE4D3] dark:bg-[#2C1F10] px-2 py-1 rounded text-[#8B5E3C] dark:text-[#C9A87C]">
+                        {action.method}
+                      </span>
+                    </td>
+                    <td className="px-4 lg:px-6 py-4">
+                      {getStatusBadge(action.status)}
+                    </td>
+                    <td className="px-4 lg:px-6 py-4">
                       <p className="text-xs lg:text-sm text-[#2C1A0E] dark:text-[#F0E6D3] max-w-xs truncate">
                         {action.description}
                       </p>
@@ -232,14 +407,6 @@ export default function Actions() {
                             {action.user_agent?.split(' ')[0] || 'Unknown'}
                           </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 lg:px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <LinkIcon className="w-4 h-4 text-[#8B5E3C] dark:text-[#C9A87C] flex-shrink-0" />
-                        <span className="text-xs lg:text-sm text-[#2C1A0E] dark:text-[#F0E6D3] truncate max-w-[150px] block">
-                          {action.url}
-                        </span>
                       </div>
                     </td>
                     <td className="px-4 lg:px-6 py-4">
@@ -263,7 +430,7 @@ export default function Actions() {
                 key={action.id}
                 className="p-4 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208] transition-colors duration-150"
               >
-                {/* Header */}
+                {/* Header: ID, User, Method, Status */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono text-[#A0856A] dark:text-[#8A6A4A]">
@@ -275,6 +442,12 @@ export default function Actions() {
                         #{action.user_id}
                       </span>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-mono bg-[#EDE4D3] dark:bg-[#2C1F10] px-2 py-0.5 rounded text-[#8B5E3C] dark:text-[#C9A87C]">
+                      {action.method}
+                    </span>
+                    {getStatusBadge(action.status)}
                   </div>
                 </div>
 
@@ -320,14 +493,15 @@ export default function Actions() {
                   </span>
                 </div>
 
-                {/* Metadata (if exists) */}
-                {action.metadata && Object.keys(action.metadata).length > 0 && (
+                {/* Metadata (if present) */}
+                {action.metadata && action.metadata.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-[#DDD0B8] dark:border-[#4A3520]">
                     <details className="text-xs">
-                      <summary className="text-[#8B5E3C] dark:text-[#C9A87C] font-semibold cursor-pointer">
+                      <summary className="text-[#8B5E3C] dark:text-[#C9A87C] font-semibold cursor-pointer flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
                         View Metadata
                       </summary>
-                      <pre className="mt-2 p-2 bg-[#F5EFE6] dark:bg-[#1A1208] rounded-lg text-[#2C1A0E] dark:text-[#F0E6D3] overflow-x-auto">
+                      <pre className="mt-2 p-2 bg-[#F5EFE6] dark:bg-[#1A1208] rounded-lg text-[#2C1A0E] dark:text-[#F0E6D3] overflow-x-auto text-xs">
                         {JSON.stringify(action.metadata, null, 2)}
                       </pre>
                     </details>
@@ -345,7 +519,7 @@ export default function Actions() {
                 No actions found
               </p>
               <p className="text-xs sm:text-sm text-[#A0856A] dark:text-[#8A6A4A]">
-                {searchTerm || dateRange.start || dateRange.end
+                {hasActiveFilters
                   ? 'Try adjusting your filters'
                   : 'There are no user actions to display at the moment.'}
               </p>
@@ -420,12 +594,12 @@ export default function Actions() {
           </div>
 
           <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl p-3 sm:p-4 text-center transition-colors duration-300 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208]">
-            <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[#8B5E3C] dark:text-[#C9A87C] mx-auto mb-1 sm:mb-2" />
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#8B5E3C] dark:text-[#C9A87C] mx-auto mb-1 sm:mb-2" />
             <p className="text-sm sm:text-base font-bold text-[#2C1A0E] dark:text-[#F0E6D3]">
-              {new Set(actions?.map((a) => a.url)).size || 0}
+              {actions?.filter((a) => a.status === 'success').length || 0}
             </p>
             <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A] mt-0.5 sm:mt-1">
-              Unique URLs
+              Successful Actions
             </p>
           </div>
         </div>

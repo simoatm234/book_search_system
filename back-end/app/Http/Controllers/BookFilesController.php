@@ -58,10 +58,4 @@ class BookFilesController extends Controller
     {
         //
     }
-
-    // get cover or file
-    public function dowlodedFrom()
-    {
-       
-    }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\authUserController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookFilesController;
+use App\Http\Controllers\BooksSubjectController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\UserActionsController;
 use App\Http\Controllers\UserBookController;
@@ -27,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/actions', [UserActionsController::class, 'index']);
     });
         Route::prefix('books')->group(function () {
-            Route::get('/all' , [BookController::class , 'index']);
+            // Route::get('/all' , [BookController::class , 'index']);
             Route::get('/show/{book}' , [BookController::class , 'show']);
 
             
@@ -37,7 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::get('/user-books/my-books', [UserBookController::class, 'myBooks']);
 
         // Track actions
-        Route::post('/user-books/track-read', [UserBookController::class, 'trackRead']);
+        Route::post('/user-books/track-read/{bookId}', [UserBookController::class, 'trackRead']);
         Route::post('/user-books/track-download/{bookId}', [UserBookController::class, 'trackDownload']);
 
         // // Statistics
@@ -64,6 +65,10 @@ Route::prefix('/user')->group(function (){
    
 });
 
-Route::get('booksFiles/{type}/{filename}', [BookController::class, 'getFile'])
-    ->where('type', 'cover|file')
-    ->name('booksFiles.getFile');
+// Route::get('booksFiles/{type}/{filename}', [BookController::class, 'getFile'])
+//     ->where('type', 'cover|file')
+//     ->name('booksFiles.getFile');
+
+Route::get('books/all', [BookController::class, 'index']);
+Route::get('books/categorys', [BookController::class, 'booksBySubject']);
+Route::get('books/getAllSubjects', [BookController::class, 'getAllSubjects']);

@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 export default function CheckAuthPage() {
   const { isAuth, user, token } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     // Check if authenticated
-    if (!isAuth || !token) {
+    if (!isAuth || !token || !userId) {
       navigate('/login', { replace: true });
       return;
     }
@@ -18,10 +19,13 @@ export default function CheckAuthPage() {
       const role = user.role.toLowerCase();
 
       if (role === 'admin') {
+        console.log('admin');
         navigate('/admin/dashboard', { replace: true });
       } else if (role === 'user') {
+        console.log('user');
         navigate('/user/home', { replace: true });
       } else {
+        console.log('null');
         navigate('/login', { replace: true });
       }
     }

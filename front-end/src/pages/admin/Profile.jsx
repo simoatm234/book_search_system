@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Mail,
@@ -10,6 +10,8 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
+  LogIn,
+  Activity,
 } from 'lucide-react';
 import EditeProfile from '../../components/admin/EditeProfile';
 import EditePass from '../../components/admin/EditePass';
@@ -23,20 +25,41 @@ export default function Profile() {
   const [isEditePass, setIsEditePass] = useState(false);
   const { showMessage } = useNotif();
 
+  // Compute stats from user_books data
+  const stats = useMemo(() => {
+    const booksRead =
+      user?.user_books?.filter((ub) => ub.action === 'read').length || 0;
+    const currentlyReading =
+      user?.user_books?.filter((ub) => ub.action === 'downloaded').length || 0;
+    // Wishlist could be a separate field, but for now we'll use a placeholder
+    // If you have a 'wishlist' action or separate array, adjust accordingly.
+    const wishlist = 0;
+    return { booksRead, currentlyReading, wishlist };
+  }, [user]);
+
+  // Get recent activities (last 3 actions sorted by action_at)
+  const recentActivities = useMemo(() => {
+    if (!user?.user_books) return [];
+    return [...user.user_books]
+      .sort((a, b) => new Date(b.action_at) - new Date(a.action_at))
+      .slice(0, 3);
+  }, [user]);
+
+  // Map user fields (handle both camelCase and snake_case from API)
   const profileData = {
     name: user?.name || 'User Name',
     username: user?.username || 'username',
     email: user?.email || 'user@example.com',
     role: user?.role || 'user',
     id: user?.id || 'N/A',
-    confirmed: user?.confirmed || false,
-    isAuth: user?.isAuth || false,
-    createdAt: user?.createdAt || new Date().toISOString(),
+    confirmed: user?.confirmed === 1 || user?.confirmed === true || false,
+    isAuth: user?.is_auth === 1 || user?.isAuth === true || false,
+    createdAt: user?.created_at || user?.createdAt || new Date().toISOString(),
+    lastLoginAt: user?.last_login_at || user?.lastLoginAt || null,
   };
 
   const avatarLetter = profileData.name?.charAt(0).toUpperCase() || '?';
-  const isAdmin = profileData.role?.toLowerCase() === 'admin';
-  const isLibrarian = profileData.role?.toLowerCase() === 'librarian';
+  
 
   const getRoleColor = (role) => {
     switch (role?.toLowerCase()) {
@@ -97,6 +120,18 @@ export default function Profile() {
     }
   };
 
+  // Helper to format date nicely
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FDFAF4] via-[#F9F4ED] to-[#F5EFE6] dark:from-[#0F0A05] dark:via-[#1A1208] dark:to-[#231608] p-4 sm:p-6 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
@@ -137,10 +172,17 @@ export default function Profile() {
                   <div className="flex items-center gap-2 justify-center sm:justify-start">
                     <Calendar className="w-4 h-4 text-[#8B5E3C] dark:text-[#C9A87C] flex-shrink-0" />
                     <span className="text-xs text-[#2C1A0E] dark:text-[#F0E6D3]">
-                      Joined:{' '}
-                      {new Date(profileData.createdAt).toLocaleDateString()}
+                      Joined: {formatDate(profileData.createdAt)}
                     </span>
                   </div>
+                  {profileData.lastLoginAt && (
+                    <div className="flex items-center gap-2 justify-center sm:justify-start">
+                      <LogIn className="w-4 h-4 text-[#8B5E3C] dark:text-[#C9A87C] flex-shrink-0" />
+                      <span className="text-xs text-[#2C1A0E] dark:text-[#F0E6D3]">
+                        Last login: {formatDate(profileData.lastLoginAt)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -181,12 +223,12 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Stats Cards - Responsive grid */}
+        {/* Stats Cards - Dynamic based on user_books */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl p-4 sm:p-6 text-center transition-colors duration-300 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208]">
             <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-[#8B5E3C] dark:text-[#C9A87C] mx-auto mb-2 sm:mb-3" />
             <p className="text-2xl sm:text-3xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-1">
-              24
+              {stats.booksRead}
             </p>
             <p className="text-xs sm:text-sm text-[#A0856A] dark:text-[#8A6A4A]">
               Books Read
@@ -196,7 +238,7 @@ export default function Profile() {
           <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl p-4 sm:p-6 text-center transition-colors duration-300 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208]">
             <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-[#8B5E3C] dark:text-[#C9A87C] mx-auto mb-2 sm:mb-3" />
             <p className="text-2xl sm:text-3xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-1">
-              12
+              {stats.currentlyReading}
             </p>
             <p className="text-xs sm:text-sm text-[#A0856A] dark:text-[#8A6A4A]">
               Currently Reading
@@ -206,7 +248,7 @@ export default function Profile() {
           <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl p-4 sm:p-6 text-center transition-colors duration-300 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208]">
             <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-[#8B5E3C] dark:text-[#C9A87C] mx-auto mb-2 sm:mb-3" />
             <p className="text-2xl sm:text-3xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-1">
-              8
+              {stats.wishlist}
             </p>
             <p className="text-xs sm:text-sm text-[#A0856A] dark:text-[#8A6A4A]">
               Wishlist
@@ -273,6 +315,41 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
+        {/* Recent Activity Section */}
+        {recentActivities.length > 0 && (
+          <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl shadow-lg overflow-hidden mb-4 sm:mb-6 transition-colors duration-300">
+            <div className="p-4 sm:p-6 border-b border-[#DDD0B8] dark:border-[#4A3520] bg-[#F5EFE6] dark:bg-[#1A1208]">
+              <h2 className="text-base sm:text-lg font-semibold text-[#2C1A0E] dark:text-[#F0E6D3] flex items-center gap-2">
+                <Activity className="w-5 h-5 text-[#8B5E3C] dark:text-[#C9A87C]" />
+                Recent Activity
+              </h2>
+            </div>
+            <div className="divide-y divide-[#DDD0B8] dark:divide-[#4A3520]">
+              {recentActivities.map((activity, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208] transition-colors duration-150"
+                >
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="w-5 h-5 text-[#8B5E3C] dark:text-[#C9A87C]" />
+                    <div>
+                      <p className="text-sm font-medium text-[#2C1A0E] dark:text-[#F0E6D3] capitalize">
+                        {activity.action} a book
+                      </p>
+                      <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A]">
+                        Book ID: {activity.book_id}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A]">
+                    {formatDate(activity.action_at)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons - Responsive */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

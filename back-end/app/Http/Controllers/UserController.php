@@ -106,10 +106,23 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+        try {
+            // Load userBooks relationship
+            $user->load('userBooks');
+
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+            ]);
+        } catch (\Throwable $th) {
+            \Log::error('Error fetching user: ' . $th->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch user',
+                'error' => $th->getMessage(),
+            ], 500);
+        }
     }
 
     /**

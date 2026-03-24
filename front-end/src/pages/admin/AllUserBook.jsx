@@ -3,6 +3,7 @@ import { useBook } from '../../Services/App/slice/Dispatches/BookDispatch';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 import { useSelector } from 'react-redux';
 import { Loader2, BookOpen, Eye, Download } from 'lucide-react';
+import SmullLoading from '../../components/admin/SmullLoading';
 
 export default function AllUserBook() {
   const { allUserBook } = useBook();
@@ -13,7 +14,7 @@ export default function AllUserBook() {
     const fetchUserBooks = async () => {
       try {
         const res = await allUserBook();
-        console.log(res);
+        // The response now contains pagination metadata and a `data` array
         showMessage({
           message: res?.payload?.message || 'User books loaded!',
           type: 'success',
@@ -30,7 +31,6 @@ export default function AllUserBook() {
     fetchUserBooks();
   }, []);
 
-  // 🎯 map enum → UI
   const getActionUI = (action) => {
     switch (action) {
       case 'read':
@@ -57,6 +57,9 @@ export default function AllUserBook() {
     }
   };
 
+  // The actual list of user book records is inside UserBooks.data (paginated response)
+  const userBooksList = UserBooks?.data || [];
+
   return (
     <div className="min-h-screen bg-[#F4F0E6] dark:bg-[#1A1208]">
       {/* Header */}
@@ -70,7 +73,7 @@ export default function AllUserBook() {
               User Books Activity
             </h1>
             <p className="text-sm text-[#A0856A]">
-              {UserBooks?.length || 0} records
+              {UserBooks?.total || 0} records
             </p>
           </div>
         </div>
@@ -79,13 +82,9 @@ export default function AllUserBook() {
       {/* Table */}
       <div className="max-w-7xl mx-auto px-6 py-8 relative">
         {/* Loading */}
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#F4F0E6]/60 backdrop-blur-sm rounded-xl">
-            <Loader2 className="w-10 h-10 animate-spin text-[#8B5E3C]" />
-          </div>
-        )}
+        {loading && <SmullLoading content={'user books'} />}
 
-        <div className={loading ? 'blur-sm' : ''}>
+        <div>
           <div className="bg-[#FDFAF4] dark:bg-[#231608] border border-[#DDD0B8] rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -113,7 +112,7 @@ export default function AllUserBook() {
                 </thead>
 
                 <tbody className="divide-y divide-[#DDD0B8]">
-                  {UserBooks?.map((ub) => {
+                  {userBooksList.map((ub) => {
                     const actionUI = getActionUI(ub.action);
 
                     return (
@@ -121,22 +120,15 @@ export default function AllUserBook() {
                         key={ub.id}
                         className="hover:bg-[#F4F0E6] dark:hover:bg-[#1A1208] transition"
                       >
-                        {/* ID */}
                         <td className="px-6 py-4 text-sm font-medium text-[#8B5E3C]">
                           #{ub.id}
                         </td>
-
-                        {/* User */}
                         <td className="px-6 py-4 text-sm text-[#2C1A0E] dark:text-[#F0E6D3]">
                           {ub.user?.name || 'Unknown'}
                         </td>
-
-                        {/* Book */}
                         <td className="px-6 py-4 text-sm text-[#A0856A]">
                           {ub.book?.title || 'No title'}
                         </td>
-
-                        {/* Action Badge */}
                         <td className="px-6 py-4 text-center">
                           <div
                             className={`inline-flex items-center gap-1 px-3 py-1 border rounded-full text-xs font-medium ${actionUI.style}`}
@@ -145,15 +137,11 @@ export default function AllUserBook() {
                             {actionUI.label}
                           </div>
                         </td>
-
-                        {/* Action At */}
                         <td className="px-6 py-4 text-sm">
                           {ub.action_at
                             ? new Date(ub.action_at).toLocaleString()
                             : '-'}
                         </td>
-
-                        {/* Created */}
                         <td className="px-6 py-4 text-sm">
                           {ub.created_at
                             ? new Date(ub.created_at).toLocaleString()
@@ -167,8 +155,8 @@ export default function AllUserBook() {
             </div>
           </div>
 
-          {/* Empty */}
-          {UserBooks?.length === 0 && (
+          {/* Empty state */}
+          {userBooksList.length === 0 && !loading && (
             <div className="text-center py-10 text-[#A0856A]">
               No activity found
             </div>

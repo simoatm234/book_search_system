@@ -44,14 +44,18 @@ export const Api = {
     await customAxios.post('user/reset-password', data),
   // books
   allBooks: async () => await customAxios.get('books/all'),
+  getAllSubject: async () => await customAxios.get('books/getAllSubjects'),
+  getBySubject: async (subject) =>
+    await customAxios.get('books/categorys', subject),
   showBook: async (bookId) => customAxios.get(`books/show/${bookId}`),
   showBookFile: async (bookFileId) =>
     await customAxios.get(`booksFiles/show/${bookFileId}`),
   getBookCover: async (filename) =>
     await customAxios.get(`booksFiles/cover/${filename}`),
+  getBookCategory: async () => await customAxios.get('books/all/categorys'),
   getAllUserBooks: () => customAxios.get('books/user-books'),
   setUserBookRead: (book_Id) =>
-    customAxios.post('books/user-books/track-read', book_Id),
+    customAxios.post(`books/user-books/track-read/${book_Id}`),
   setUserBookDownload: (book_Id) =>
     customAxios.post(
       `books/user-books/track-download/${book_Id}`,

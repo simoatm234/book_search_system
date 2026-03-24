@@ -14,13 +14,16 @@ import {
   Download,
   FileCheck,
   FileX,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ShowBookInfo from '../../components/admin/ShowBookInfo';
 import { Api } from '../../Services/App/Api';
+import SmullLoading from '../../components/admin/SmullLoading';
 
 export default function AllBooks() {
-  const { allBooks } = useBook();
+  const { allBooks, readBook } = useBook();
   const { showMessage } = useNotif();
   const { books, loading } = useSelector((state) => state.books);
   const [bookId, setBookId] = useState(null);
@@ -37,7 +40,6 @@ export default function AllBooks() {
     const fetchBooks = async () => {
       try {
         const res = await allBooks();
-        console.log(res);
         showMessage({
           message: res?.payload?.message || 'Books loaded successfully!',
           type: 'success',
@@ -67,7 +69,7 @@ export default function AllBooks() {
     const matchesLanguage =
       filterLanguage === 'all' || book.languages?.includes(filterLanguage);
 
-    const hasFiles = book.files && book.files.length > 0;
+    const hasFiles = !!book.files; // files is an object if downloaded
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'downloaded' && hasFiles) ||
@@ -94,16 +96,18 @@ export default function AllBooks() {
 
   // Get download stats
   const totalBooks = books?.length || 0;
-  const downloadedBooks =
-    books?.filter((b) => b.files && b.files.length > 0).length || 0;
+  const downloadedBooks = books?.filter((b) => b.files).length || 0;
   const notDownloadedBooks = totalBooks - downloadedBooks;
+  const totalDownloads =
+    books?.reduce((sum, b) => sum + (b.download_count || 0), 0) || 0;
+  const totalReads =
+    books?.reduce((sum, b) => sum + (b.reading_count || 0), 0) || 0;
 
   // Handle download file
   const handleDownloadFile = async (bookId, fileName) => {
     try {
       const response = await Api.setUserBookDownload(bookId);
-
-      const blob = response.data; // ✅ correct now
+      const blob = response.data;
 
       if (!blob || blob.size === 0) {
         throw new Error('Empty file');
@@ -128,6 +132,11 @@ export default function AllBooks() {
     }
   };
 
+  // Handle read book
+  const handelReadBook = (bookId) => {
+    navigate(`/admin/books/read/${bookId}`);
+  };
+
   // Handle show book
   const handleShowBook = (id) => {
     setBookId(id);
@@ -139,7 +148,7 @@ export default function AllBooks() {
       {/* Header */}
       <div className="bg-[#FDFAF4] dark:bg-[#231608] border-b border-[#DDD0B8] dark:border-[#4A3520] px-6 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-[#EDE4D3] dark:bg-[#2C1F10] border border-[#C9A87C] dark:border-[#6B4423] flex items-center justify-center">
                 <BookOpen className="text-[#8B5E3C] dark:text-[#C9A87C] w-6 h-6" />
@@ -155,7 +164,7 @@ export default function AllBooks() {
             </div>
 
             {/* Stats */}
-            <div className="flex gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-[#8B5E3C] dark:text-[#C9A87C]">
                   {downloadedBooks}
@@ -170,6 +179,22 @@ export default function AllBooks() {
                 </p>
                 <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A]">
                   Pending
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#8B5E3C] dark:text-[#C9A87C]">
+                  {totalDownloads}
+                </p>
+                <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A]">
+                  Total Downloads
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#8B5E3C] dark:text-[#C9A87C]">
+                  {totalReads}
+                </p>
+                <p className="text-xs text-[#A0856A] dark:text-[#8A6A4A]">
+                  Total Reads
                 </p>
               </div>
             </div>
@@ -229,19 +254,10 @@ export default function AllBooks() {
       {/* Table Section */}
       <div className="max-w-7xl mx-auto px-6 py-8 relative">
         {/* Loading Overlay */}
-        {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#F4F0E6]/60 dark:bg-[#1A1208]/60 backdrop-blur-sm rounded-2xl">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="w-16 h-16 text-[#8B5E3C] dark:text-[#C9A87C] animate-spin" />
-              <p className="text-[#2C1A0E] dark:text-[#F0E6D3] font-medium">
-                Loading books...
-              </p>
-            </div>
-          </div>
-        )}
+        {loading && <SmullLoading content={'books'} />}
 
         {/* Table Content */}
-        <div className={loading ? 'blur-sm' : ''}>
+        <div>
           {currentBooks?.length === 0 ? (
             <div className="text-center py-16 bg-[#FDFAF4] dark:bg-[#231608] rounded-xl border border-[#DDD0B8] dark:border-[#4A3520]">
               <Book className="w-16 h-16 text-[#C9A87C] dark:text-[#6B4423] mx-auto mb-4" />
@@ -252,7 +268,7 @@ export default function AllBooks() {
           ) : (
             <>
               {/* Table */}
-              <div className="bg-[#FDFAF4] dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl overflow-hidden">
+              <div className="bg-[#FDFAF4] dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -279,13 +295,15 @@ export default function AllBooks() {
                     </thead>
                     <tbody className="divide-y divide-[#DDD0B8] dark:divide-[#4A3520]">
                       {currentBooks?.map((book) => {
-                        const hasFiles = book.files && book.files.length > 0;
-                        const bookFile = hasFiles ? book.files[0] : null;
-                        const baseUrl = import.meta.env.VITE_BACK_END_URL_IMAGE;
+                        const hasFiles = !!book.files;
+                        const bookFile = hasFiles ? book.files : null;
+                        const baseUrl = import.meta.env.VITE_BACK_END_URL_FILES;
 
                         const coverUrl = bookFile?.cover_path
                           ? `${baseUrl}storage/${bookFile.cover_path}`
-                          : null;
+                          : book.formats?.['image/jpeg']
+                            ? book.formats['image/jpeg']
+                            : null;
 
                         const fileUrl = bookFile?.file_path
                           ? `${baseUrl}storage/${bookFile.file_path}`
@@ -313,12 +331,6 @@ export default function AllBooks() {
                                       alt={book.title}
                                       className="w-full h-full object-cover"
                                     />
-                                  ) : book.formats?.['image/jpeg'] ? (
-                                    <img
-                                      src={book.formats['image/jpeg']}
-                                      alt={book.title}
-                                      className="w-full h-full object-cover"
-                                    />
                                   ) : (
                                     <Book className="w-5 h-5 text-[#C9A87C] dark:text-[#6B4423]" />
                                   )}
@@ -328,15 +340,30 @@ export default function AllBooks() {
                                   <p className="text-sm font-medium text-[#2C1A0E] dark:text-[#F0E6D3] line-clamp-2">
                                     {book.title}
                                   </p>
-
-                                  {hasFiles && (
+                                  {hasFiles && bookFile?.file_format && (
                                     <p className="text-xs text-[#8B5E3C] dark:text-[#C9A87C] mt-1">
                                       {bookFile.file_format.toUpperCase()} •{' '}
                                       {new Date(
-                                        bookFile.downloaded_at
+                                        bookFile.downloaded_at ||
+                                          book.created_at
                                       ).toLocaleDateString()}
                                     </p>
                                   )}
+                                  {/* Display download count and reading count */}
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-[#A0856A] dark:text-[#8A6A4A]">
+                                    {book.download_count > 0 && (
+                                      <span className="flex items-center gap-1">
+                                        <Download className="w-3 h-3" />
+                                        {book.download_count}
+                                      </span>
+                                    )}
+                                    {book.reading_count > 0 && (
+                                      <span className="flex items-center gap-1">
+                                        <BookOpen className="w-3 h-3" />
+                                        {book.reading_count}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </td>
@@ -395,6 +422,7 @@ export default function AllBooks() {
                                 <button
                                   onClick={() => handleShowBook(book.id)}
                                   className="p-2 hover:bg-[#EDE4D3] dark:hover:bg-[#2C1F10] rounded-lg transition group"
+                                  title="View Details"
                                 >
                                   <Eye className="w-4 h-4 text-[#8B5E3C] dark:text-[#C9A87C]" />
                                 </button>
@@ -404,10 +432,11 @@ export default function AllBooks() {
                                     onClick={() =>
                                       handleDownloadFile(
                                         book.id,
-                                        `${book.title}.${bookFile.file_format}`
+                                        `${book.title}.${bookFile?.file_format || 'txt'}`
                                       )
                                     }
                                     className="p-2 hover:bg-[#EDE4D3] dark:hover:bg-[#2C1F10] rounded-lg transition group"
+                                    title="Download"
                                   >
                                     <Download className="w-4 h-4 text-[#8B5E3C] dark:text-[#C9A87C]" />
                                   </button>
@@ -424,7 +453,7 @@ export default function AllBooks() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                   <p className="text-sm text-[#A0856A] dark:text-[#8A6A4A]">
                     Showing {startIndex + 1} to{' '}
                     {Math.min(endIndex, filteredBooks?.length || 0)} of{' '}
@@ -467,6 +496,7 @@ export default function AllBooks() {
             bookId={bookId}
             setCloseBook={setShowBook}
             handleDownloadFile={handleDownloadFile}
+            handelReadBook={handelReadBook}
           />
         )}
       </div>

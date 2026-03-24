@@ -7,7 +7,6 @@ import {
   User,
   CheckCircle,
   XCircle,
-  LogOut,
   Search,
   MoreVertical,
   Edit,
@@ -19,9 +18,9 @@ import {
   Users,
 } from 'lucide-react';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
-import StoreUser from '../../components/admin/StoreUser';
 import ViewUserDetail from '../../components/admin/ViewUserDetail';
 import UpdateUserInfo from '../../components/admin/UpdateUserInfo';
+import SmullLoading from '../../components/admin/SmullLoading';
 
 export default function AllUsers() {
   const {
@@ -33,7 +32,7 @@ export default function AllUsers() {
     restorUser,
   } = useUser();
   const { showMessage } = useNotif();
-  const { users, deletedUsers } = useSelector((state) => state.user);
+  const { users, deletedUsers, loading } = useSelector((state) => state.user);
   const [showTrashed, setShowTrashed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewDetails, setViewDetails] = useState({ show: false, id: null });
@@ -42,10 +41,15 @@ export default function AllUsers() {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
 
+  // Refresh both user lists
+  const refreshUsers = async () => {
+    await Promise.all([fetchAllUsers(), fetchAllUsersTrashed()]);
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        await Promise.all([fetchAllUsers(), fetchAllUsersTrashed()]);
+        await refreshUsers();
       } catch (error) {
         showMessage({
           message:
@@ -71,14 +75,14 @@ export default function AllUsers() {
 
   const confirmAccount = async (id) => {
     try {
-      const data = { confirmed: true };
+      const data = { confirmed: 1 }; // Send as 1/0 for backend
       const res = await UpdateUser({ id, data });
       if (res?.payload?.success) {
         showMessage({
           message: res?.payload?.message || 'User confirmed successfully!',
           type: 'success',
         });
-        return res;
+        await refreshUsers();
       }
     } catch (error) {
       console.error('Confirm user error:', error);
@@ -94,14 +98,14 @@ export default function AllUsers() {
 
   const unconfirmAccount = async (id) => {
     try {
-      const data = { confirmed: false };
+      const data = { confirmed: 0 };
       const res = await UpdateUser({ id, data });
       if (res?.payload?.success) {
         showMessage({
           message: res?.payload?.message || 'User unconfirmed successfully!',
           type: 'success',
         });
-        return res;
+        await refreshUsers();
       }
     } catch (error) {
       console.error('Unconfirm user error:', error);
@@ -116,17 +120,15 @@ export default function AllUsers() {
   };
 
   const softDeleteUser = async (id) => {
+    if (!confirm('Are you sure you want to deactivate this user?')) return;
     try {
-      if (confirm('Are you sure you want to deactivate this user?')) {
-        const res = await DeleteUser(id);
-        if (res?.payload?.success) {
-          showMessage({
-            message: res?.payload?.message || 'User deactivated successfully!',
-            type: 'success',
-          });
-          // Refresh both lists
-          await Promise.all([fetchAllUsers(), fetchAllUsersTrashed()]);
-        }
+      const res = await DeleteUser(id);
+      if (res?.payload?.success) {
+        showMessage({
+          message: res?.payload?.message || 'User deactivated successfully!',
+          type: 'success',
+        });
+        await refreshUsers();
       }
     } catch (error) {
       console.error('Soft delete user error:', error);
@@ -138,21 +140,20 @@ export default function AllUsers() {
   };
 
   const forceDeleteUser = async (id) => {
+    if (
+      !confirm(
+        'Are you sure you want to permanently delete this user? This action cannot be undone!'
+      )
+    )
+      return;
     try {
-      if (
-        confirm(
-          'Are you sure you want to permanently delete this user? This action cannot be undone!'
-        )
-      ) {
-        const res = await ForcDeleteUser(id);
-        if (res?.payload?.success) {
-          showMessage({
-            message: res?.payload?.message || 'User permanently deleted!',
-            type: 'success',
-          });
-          // Refresh both lists
-          await Promise.all([fetchAllUsers(), fetchAllUsersTrashed()]);
-        }
+      const res = await ForcDeleteUser(id);
+      if (res?.payload?.success) {
+        showMessage({
+          message: res?.payload?.message || 'User permanently deleted!',
+          type: 'success',
+        });
+        await refreshUsers();
       }
     } catch (error) {
       console.error('Force delete user error:', error);
@@ -171,8 +172,7 @@ export default function AllUsers() {
           message: res?.payload?.message || 'User restored successfully!',
           type: 'success',
         });
-        // Refresh both lists
-        await Promise.all([fetchAllUsers(), fetchAllUsersTrashed()]);
+        await refreshUsers();
       }
     } catch (error) {
       console.error('Restore user error:', error);
@@ -203,10 +203,6 @@ export default function AllUsers() {
       });
       setOpenDropdownId(userId);
     }
-  };
-
-  const isUserDeleted = (user) => {
-    return user.deleted_at !== null && user.deleted_at !== undefined;
   };
 
   useEffect(() => {
@@ -333,8 +329,8 @@ export default function AllUsers() {
                   Confirmed
                 </p>
                 <p className="text-sm font-bold text-[#2C1A0E] dark:text-[#F0E6D3]">
-                  {users?.filter((u) => u.confirmed && !isUserDeleted(u))
-                    .length || 0}
+                  {users?.filter((u) => u.confirmed && !u.deleted_at).length ||
+                    0}
                 </p>
               </div>
             </div>
@@ -356,7 +352,9 @@ export default function AllUsers() {
         </div>
 
         {/* Users Table Card */}
-        <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl shadow-lg overflow-visible transition-colors duration-300">
+        <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl shadow-lg overflow-visible transition-colors duration-300 relative">
+          {loading && <SmullLoading content={'users'} />}
+
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
@@ -490,7 +488,7 @@ export default function AllUsers() {
                       <td className="px-4 lg:px-6 py-4">
                         <div className="flex items-center gap-1 lg:gap-2">
                           <button
-                            disabled={user.confirmed}
+                            disabled={!!user.confirmed}
                             onClick={() => confirmAccount(user.id)}
                             className="px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 dark:disabled:bg-emerald-800/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors duration-200 whitespace-nowrap"
                           >
@@ -637,7 +635,7 @@ export default function AllUsers() {
                 {!showTrashed && (
                   <div className="flex gap-2">
                     <button
-                      disabled={user.confirmed}
+                      disabled={!!user.confirmed}
                       onClick={() => confirmAccount(user.id)}
                       className="flex-1 py-2 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 dark:disabled:bg-emerald-800/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors duration-200"
                     >
@@ -657,7 +655,7 @@ export default function AllUsers() {
           </div>
 
           {/* Empty State */}
-          {(!filteredUsers || filteredUsers.length === 0) && (
+          {(!filteredUsers || filteredUsers.length === 0) && !loading && (
             <div className="text-center py-8 sm:py-12 md:py-16 px-4">
               <User className="w-12 h-12 sm:w-16 sm:h-16 text-[#DDD0B8] dark:text-[#4A3520] mx-auto mb-3 sm:mb-4" />
               <p className="text-base sm:text-lg font-medium text-[#2C1A0E] dark:text-[#F0E6D3] mb-1 sm:mb-2">
@@ -674,7 +672,7 @@ export default function AllUsers() {
           )}
         </div>
 
-        {/* Fixed Dropdown Menu - Conditional Actions */}
+        {/* Fixed Dropdown Menu */}
         {openDropdownId && (
           <div
             ref={dropdownRef}
@@ -685,7 +683,6 @@ export default function AllUsers() {
             }}
           >
             <div className="py-1">
-              {/* View Details - Always Available */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -701,9 +698,7 @@ export default function AllUsers() {
                 View Details
               </button>
 
-              {/* Conditional Actions based on showTrashed */}
               {showTrashed ? (
-                // ACTIONS FOR DELETED USERS VIEW
                 <>
                   <div className="border-t border-[#DDD0B8] dark:border-[#4A3520] my-1"></div>
                   <button
@@ -730,7 +725,6 @@ export default function AllUsers() {
                   </button>
                 </>
               ) : (
-                // ACTIONS FOR ALL USERS VIEW
                 <>
                   <button
                     onClick={(e) => {
@@ -790,8 +784,7 @@ export default function AllUsers() {
           <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-xl p-3 sm:p-4 text-center transition-colors duration-300 hover:bg-[#F9F4ED] dark:hover:bg-[#1A1208]">
             <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-[#8B5E3C] dark:text-[#C9A87C] mx-auto mb-1 sm:mb-2" />
             <p className="text-lg sm:text-2xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3]">
-              {users?.filter((u) => u.confirmed && !isUserDeleted(u)).length ||
-                0}
+              {users?.filter((u) => u.confirmed && !u.deleted_at).length || 0}
             </p>
             <p className="text-xs sm:text-sm text-[#A0856A] dark:text-[#8A6A4A] mt-0.5 sm:mt-1">
               Confirmed Users

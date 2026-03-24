@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { Api } from '../../Api';
-import { login, me } from '../AsyncThunks/AuthThunks';
+import { login, showUser } from '../AsyncThunks/AuthThunks';
 import { logout, toggleDark } from '../authSlice';
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -9,7 +9,7 @@ export const useAuth = () => {
     return {
       login: (data) => dispatch(login(data)),
       logout: () => dispatch(logout()),
-      me: () => dispatch(me()),
+      showUser: (id) => dispatch(showUser(id)),
       toggleDark: () => dispatch(toggleDark()),
     };
   });

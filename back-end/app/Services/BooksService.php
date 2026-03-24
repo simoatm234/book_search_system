@@ -51,7 +51,7 @@ class BooksService
                 foreach ($books as $bookData) {
                     if ($imported >= $limit) break;
 
-                    $result = $this->importSingleBook($bookData);
+                    $result = $this->importSingleBook($bookData , $subject);
 
                     if ($result === 'imported') {
                         $imported++;
@@ -83,7 +83,7 @@ class BooksService
     /**
      * Import single book
      */
-    public function importSingleBook(array $data)
+    public function importSingleBook(array $data , string $subject)
     {
         try {
             $title = $data['title'] ?? null;
@@ -101,7 +101,7 @@ class BooksService
                 'authors' => array_map(fn($a) => $a['name'] ?? 'Unknown', $data['authors'] ?? []),
                 'translators' => array_map(fn($t) => $t['name'] ?? 'Unknown', $data['translators'] ?? []),
                 'bookshelves' => $data['bookshelves'] ?? [],
-                'subjects' => $data['subjects'] ?? [],
+                'subjects' => $subject ,
                 'languages' => $data['languages'] ?? ['en'],
                 'media_type' => $data['media_type'] ?? null,
                 'formats' => $data['formats'] ?? [],

@@ -25,8 +25,9 @@ return new class extends Migration
             $table->string('media_type')->nullable();
 
             // Identifiers
-            $table->integer('gutendex_id')->unique(); // unique ID from Gutendex
+            $table->integer('gutendex_id')->unique();
             $table->integer('download_count')->default(0);
+            $table->integer('reading_count')->default(0);
 
             // Formats (ebook links)
             $table->json('formats')->nullable();

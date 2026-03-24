@@ -22,11 +22,11 @@ const schema = yup.object({
 });
 
 export default function Login() {
-  const dispatch = useDispatch();
   const { showMessage } = useNotif();
-  const { me } = useAuth();
+  const { login, showUser } = useAuth();
   const { isAuth, token, loading, user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const userId = localStorage.getItem('userId')
 
   const {
     register,
@@ -40,8 +40,8 @@ export default function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      if (isAuth && token) {
-        await me();
+      if (isAuth && token && userId) {
+        await showUser(userId);
         if (user) {
           navigate('/SheckAuthPage', { replace: true });
         }
@@ -53,9 +53,8 @@ export default function Login() {
 
   const handleLogin = async (data) => {
     try {
-      const result = await dispatch(login(data));
-
-      if (result.type === 'users/login/fulfilled') {
+      const result = await login(data);
+      if (result.payload.success ) {
         showMessage({
           message: 'Login successful',
           type: 'success',

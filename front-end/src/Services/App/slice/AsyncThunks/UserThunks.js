@@ -7,7 +7,6 @@ export const fetchAllUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await Api.fetchAllUsers();
-      console.log('normal',response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -21,7 +20,6 @@ export const fetchAllUsersTrashed = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await Api.fetchAllUsersTrashed();
-      console.log('trashed',response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -35,7 +33,6 @@ export const fetchAllActions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await Api.fetchAllActions();
-      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(

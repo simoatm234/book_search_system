@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App/slice/Dispatches/AuthDispatch';
 import SideBar from '../../components/admin/SideBar';
-import NavBar from '../../components/admin/NavBar';
 import { Api } from '../App/Api';
 import Notification from '../../components/Notification';
 import Loading from '../../components/admin/Loading';
@@ -12,20 +11,20 @@ import Loading from '../../components/admin/Loading';
 export default function AdminLayOut() {
   const { user, loading } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const { me, logout } = useAuth();
+  const { showUser, logout } = useAuth();
 
   useEffect(() => {
     const initializeApp = async () => {
       const token = localStorage.getItem('token');
-
-      if (!token) {
+      const id = localStorage.getItem('userId');
+      if (!token && !id) {
         navigate('/login');
         return;
       }
 
       try {
-        const response = await me();
-        if (!response.payload?.user) {
+        const response = await showUser(id);
+        if (!response.payload?.success) {
           logout();
           navigate('/login');
         }
@@ -62,7 +61,6 @@ export default function AdminLayOut() {
     <div className="flex h-screen bg-[#F4F0E6] dark:bg-[#1A1208] transition-colors duration-300">
       <SideBar user={user} onLogout={onLogout} />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <NavBar />
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>

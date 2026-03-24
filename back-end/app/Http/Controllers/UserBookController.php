@@ -46,30 +46,48 @@ class UserBookController extends Controller
     /**
      * Track read action
      */
-    public function trackRead(Request $request)
-    {
-        $request->validate([
-            'book_Id' => 'required|exists:books,id',
-        ]);
 
+
+    public function trackRead($bookId)
+    {
         try {
+            $book = Book::with('files')->findOrFail($bookId);
+
+            $file = $book->files->first();
+
+            if (!$file) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No file found'
+                ], 404);
+            }
+
+            // ✅ Track
             $userBook = $this->userBookService->trackRead(
                 auth()->id(),
-                $request->book_id
+                $bookId
             );
 
+            // ✅ URL
+            $url = url('storage/' . $file->file_path);
+            $book->reading_count += 1;
+            $book->save();
             return response()->json([
                 'success' => true,
-                'message' => 'Book read tracked successfully',
-                'data' => $userBook,
-            ], 201);
+                'message' => 'Book ready',
+                'data' => [
+                    'book' => $book,
+                    'read_url' => $url,
+                    'file_path' => $file->file_path,
+                    'type' => pathinfo($file->file_path, PATHINFO_EXTENSION)
+                ]
+            ]);
         } catch (\Throwable $th) {
-            Log::error('Error tracking read: ' . $th->getMessage());
+            \Log::error($th->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to track read',
-                'error' => $th->getMessage(),
+                'message' => 'Failed to read book'
             ], 500);
         }
     }
@@ -83,7 +101,7 @@ class UserBookController extends Controller
             // 1. Check book
             $book = Book::findOrFail($bookId);
 
-            // 2. Get file (adjust relation حسب مشروعك)
+            // 2. Get file
             $file = $book->files()->first();
 
             if (!$file || !$file->file_path) {
@@ -108,6 +126,10 @@ class UserBookController extends Controller
                     'message' => 'File not found in storage',
                 ], 404);
             }
+
+            $book->download_count += 1;
+            $book->save();
+
 
             return response()->download($path, basename($path));
         } catch (\Throwable $th) {

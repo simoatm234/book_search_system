@@ -3,6 +3,7 @@ import { UserSlice } from './slice/UserSlice';
 import { authSlice } from './slice/authSlice';
 import { notificationSlice } from './slice/notificationSlice';
 import { BooksSlice } from './slice/BooksSlice';
+import { saveSlice } from './slice/saveSlice';
 
 export const stor = configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export const stor = configureStore({
     auth: authSlice.reducer,
     notification: notificationSlice.reducer,
     books: BooksSlice.reducer,
+    save: saveSlice.reducer,
   },
 });

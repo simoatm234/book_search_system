@@ -21,6 +21,9 @@ import ReadBook from '../../pages/admin/ReadBook';
 import BookSubject from '../../pages/user/BookSubject';
 import UserProfile from '../../pages/user/UserProfile';
 import Setting from '../../pages/user/Setting';
+import ShowBook from '../../pages/user/ShowBook';
+import ReadBookUser from '../../pages/user/ReadBookUser';
+import MyBooks from '../../pages/user/MyBooks';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -78,6 +81,18 @@ export const router = createBrowserRouter([
       {
         path: 'books/:subject/subject',
         element: <BookSubject />,
+      },
+      {
+        path: 'books/:bookId/show',
+        element: <ShowBook />,
+      },
+      {
+        path: 'books/:bookId/read',
+        element: <ReadBookUser />,
+      },
+      {
+        path: 'books/myBooks',
+        element: <MyBooks />,
       },
     ],
   },

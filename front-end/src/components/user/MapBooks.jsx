@@ -11,13 +11,13 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
+import { useNavigate } from 'react-router-dom';
 
 export default function MapBooks({ booksData }) {
   const { user, token, isAuth } = useSelector((state) => state.auth);
   const isAuthenticated = !!user && !!token && isAuth;
-  const { getFileAndCober, addToMyBooks, DownloadBook } = useGlobalFunction(); // assume addToMyBooks exists
-
-  // Normalize booksData: if it's an array, use it; if it has a 'data' property, use that; otherwise empty array.
+  const { getFileAndCober, addToMyBooks, DownloadBook } = useGlobalFunction();
+  const navigate = useNavigate();
   const books = Array.isArray(booksData) ? booksData : booksData?.data || [];
   const isLoading =
     !booksData || (booksData && !booksData.data && !Array.isArray(booksData));
@@ -143,7 +143,10 @@ export default function MapBooks({ booksData }) {
 
               {/* Action Buttons */}
               <div className="mt-auto space-y-2">
-                <button className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-[#F3EFE7] text-[#5C3D2E] hover:bg-[#8B5E3C] hover:text-white transition-all">
+                <button
+                  onClick={() => navigate(`/user/books/${book.id}/show`)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-[#F3EFE7] text-[#5C3D2E] hover:bg-[#8B5E3C] hover:text-white transition-all"
+                >
                   <Info size={14} /> Details
                 </button>
 
@@ -151,6 +154,7 @@ export default function MapBooks({ booksData }) {
                   {/* Read Button */}
                   <button
                     disabled={!isAuthenticated}
+                    onClick={() => navigate(`/user/books/${book.id}/read`)}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold rounded-xl transition-all ${
                       isAuthenticated
                         ? 'bg-[#2C1A0E] text-[#F0E6D3] hover:bg-black shadow-md'

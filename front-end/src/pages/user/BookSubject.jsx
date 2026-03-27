@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useBook } from '../../Services/App/slice/Dispatches/BookDispatch';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
@@ -15,7 +15,8 @@ export default function BookSubject() {
   const { getFileAndCober, DownloadBook, addToMyBooks } = useGlobalFunction();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchField, setSearchField] = useState('all'); // 'all', 'title', 'author', 'subject'
+  const [searchField, setSearchField] = useState('all');
+  const navigate = useNavigate();
 
   const isAuthenticated = !!user && !!token && isAuth;
 
@@ -176,6 +177,7 @@ export default function BookSubject() {
                   <div className="flex gap-2">
                     <button
                       disabled={!isAuthenticated}
+                      onClick={() => navigate(`/user/books/${book.id}/read`)}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition ${
                         isAuthenticated
                           ? 'bg-[#2C1A0E] text-white hover:bg-black'

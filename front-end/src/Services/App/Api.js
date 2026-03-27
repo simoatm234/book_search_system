@@ -2,7 +2,6 @@ import { customAxios } from './axios';
 
 export const Api = {
   getCsrfCookie: async () => await customAxios.get('sanctum/csrf-cookie'),
-  me: async () => await customAxios.get('user/me'),
   // Users
   fetchAllUsers: async () => await customAxios.get('user/all'),
   fetchAllUsersTrashed: async () => await customAxios.get('user/all/trashed'),
@@ -62,4 +61,11 @@ export const Api = {
       {},
       { responseType: 'blob' }
     ),
+  // save books
+  allSaves: () => customAxios.get('user/books/AllSaves'),
+  mySaves: () => customAxios.get('user/books/my-saves'),
+  storeSave: (data) => customAxios.post('user/books/saves ', data),
+  getSave: (saveId) => customAxios.get(`user/books/saves/${saveId}`),
+  deleteSave: (saveId) => customAxios.delete(`user/books/saves/${saveId}`),
+  // search
 };

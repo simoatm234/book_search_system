@@ -64,4 +64,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserBook::class);
     }
+    
+    public function savedBooks()
+    {
+        return $this->belongsToMany(Book::class, 'save_books', 'user_id', 'book_id')
+            ->withTimestamps();
+    }
 }

@@ -17,14 +17,7 @@ export const AllBooks = createAsyncThunk(
 );
 export const getBook = createAsyncThunk(
   'Books/getBook',
-  async (bookId, { getState, rejectWithValue }) => {
-    const { books } = getState().books;
-    const exists = books.some((book) => book.id === bookId);
-    if (exists) {
-      const book = books.find((book) => book.id === bookId);
-      console.log('from thunk :', book);
-      return { data: book };
-    }
+  async (bookId, { rejectWithValue }) => {
     try {
       const res = await Api.showBook(bookId);
       return res.data;

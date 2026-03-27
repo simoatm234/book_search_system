@@ -5,6 +5,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookFilesController;
 use App\Http\Controllers\BooksSubjectController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\SaveBooksController;
 use App\Http\Controllers\UserActionsController;
 use App\Http\Controllers\UserBookController;
 use App\Http\Controllers\UserController;
@@ -26,30 +27,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [authUserController::class, 'me']);
         Route::post('/logout/{user}', [authUserController::class, 'logout']);
         Route::get('/actions', [UserActionsController::class, 'index']);
+        // saves
+        Route::get('books/AllSaves', [SaveBooksController::class, 'index']);
+        Route::get('books/my-saves', [SaveBooksController::class, 'mySaves']);
+        Route::post('books/saves', [SaveBooksController::class, 'store']);
+        Route::get('books/saves/{saveBooks}', [SaveBooksController::class, 'show']);
+        Route::delete('books/saves/{saveBooks}', [SaveBooksController::class, 'destroy']);
     });
-        Route::prefix('books')->group(function () {
-
-
-
+    
+    Route::prefix('books')->group(function () {
         Route::get('/user-books', [UserBookController::class, 'index']);
-
-        // // Get my books
-        // Route::get('/user-books/my-books', [UserBookController::class, 'myBooks']);
-
         // Track actions
         Route::post('/user-books/track-read/{bookId}', [UserBookController::class, 'trackRead']);
         Route::post('/user-books/track-download/{bookId}', [UserBookController::class, 'trackDownload']);
-
-        // // Statistics
-        // Route::get('/user-books/statistics', [UserBookController::class, 'statistics']);
-        });
-  
-        Route::prefix('booksFiles')->group(function () {
-            Route::get('/all' , [BookFilesController::class , 'index']);
-            Route::get('/show/{book_files}' , [BookFilesController::class , 'show']);
-            Route::get('/file/{filename}', [BookController::class, 'getFile']);
-                });
     });
+  
+    Route::prefix('booksFiles')->group(function () {
+        Route::get('/all' , [BookFilesController::class , 'index']);
+        Route::get('/show/{book_files}' , [BookFilesController::class , 'show']);
+        Route::get('/file/{filename}', [BookController::class, 'getFile']);
+    });
+});
+
 Route::prefix('/user')->group(function (){
     Route::post('/store',[UserController::class , 'store']);
     Route::get('/show/{user}', [UserController::class, 'show']); 
@@ -64,12 +63,8 @@ Route::prefix('/user')->group(function (){
    
 });
 
-// Route::get('booksFiles/{type}/{filename}', [BookController::class, 'getFile'])
-//     ->where('type', 'cover|file')
-//     ->name('booksFiles.getFile');
 
 Route::prefix('books')->group(function () {
-
     Route::get('/all', [BookController::class, 'index']);
     Route::get('/show/{book}', [BookController::class, 'show']);
     Route::get('/subjects', [BookController::class, 'booksOrSubjects']);   

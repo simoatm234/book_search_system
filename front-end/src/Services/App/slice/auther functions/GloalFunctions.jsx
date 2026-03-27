@@ -2,23 +2,28 @@ import { useSelector } from 'react-redux';
 import { Api } from '../../Api';
 import { useBook } from '../Dispatches/BookDispatch';
 import { useNotif } from '../Dispatches/NotifDispatch';
+import { useSave } from '../Dispatches/SaveDispatch';
 
 const baseUrl = import.meta.env.VITE_BACK_END_URL_FILES;
 
 export const useGlobalFunction = () => {
   const { showMessage } = useNotif();
   const { getBook } = useBook();
+  const { storeSave, deleteSave } = useSave();
 
   const getBookInfo = async (bookId) => {
     try {
-      await getBook(bookId);
-      showMessage({
-        message: 'book retrived ',
-        type: 'success',
-      });
+      const res = await getBook(bookId);
+      console.log(res);
+      if (res.payload.success) {
+        showMessage({
+          message: 'book retrived ',
+          type: 'success',
+        });
+      }
     } catch (error) {
       showMessage({
-        message: '',
+        message: error?.response?.data?.message || 'cannot retrive book',
         type: 'error',
       });
     }
@@ -71,11 +76,55 @@ export const useGlobalFunction = () => {
   const addToMyBooks = (bookId) => {
     console.log(bookId);
   };
+  const AddSave = async (data) => {
+    try {
+      const res = await storeSave(data);
+      if (res.payload.success) {
+        showMessage({
+          message: 'book add successfuly ',
+          type: 'success',
+        });
+      } else {
+        showMessage({
+          message: res.payload,
+          type: 'wrrong',
+        });
+      }
+    } catch (error) {
+      showMessage({
+        message: 'save book failed!',
+        type: 'error',
+      });
+    }
+  };
+  const removeSave = async (saveId) => {
+    try {
+      const res = await deleteSave(saveId);
+      if (res.payload.success) {
+        showMessage({
+          message: 'book add successfuly ',
+          type: 'success',
+        });
+      } else {
+        showMessage({
+          message: res.payload,
+          type: 'wrrong',
+        });
+      }
+    } catch (error) {
+      showMessage({
+        message: 'save book failed!',
+        type: 'error',
+      });
+    }
+  };
 
   return {
     getFileAndCober,
     DownloadBook,
     getBookInfo,
     addToMyBooks,
+    AddSave,
+    removeSave,
   };
 };

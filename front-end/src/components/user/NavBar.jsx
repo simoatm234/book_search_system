@@ -37,9 +37,9 @@ export default function NavBar({ onLogout }) {
     },
     {
       name: 'My Books',
-      path: '/user/books',
+      path: '/user/books/myBooks',
       icon: <Book className="w-4 h-4" />,
-      onClick: () => (isAuth ? navigate('/user/books') : setOpenAuth(true)),
+      onClick: () => (isAuth ? navigate('/user/books/myBooks') : setOpenAuth(true)),
     },
   ];
 

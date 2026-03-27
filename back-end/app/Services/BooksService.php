@@ -13,9 +13,12 @@ class BooksService
 {
     private const API = 'https://gutendex.com/books';
 
-    public function allBooks()  {
-        return Book::with('files')->get();
+    public function allBooks()
+    {
+        $perPage = request()->input('per_page', 10);
+        return Book::with('files')->paginate($perPage);
     }
+    
     /**
      * Import books by subject/topic
      */

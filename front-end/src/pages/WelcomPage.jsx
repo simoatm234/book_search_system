@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   BookOpen,
   ArrowRight,
@@ -8,139 +9,204 @@ import {
   TrendingUp,
   Heart,
 } from 'lucide-react';
+import { useAuth } from '../Services/App/slice/Dispatches/AuthDispatch';
 
-// You can replace this with your own image URL or local asset
 const HERO_IMAGE =
   'https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
+  const { setOpenAuth } = useAuth();
+
+  // Animation Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.3 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 40 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: 'easeOut' },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 50, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.5, ease: 'easeOut' },
+    },
+    hover: {
+      y: -12,
+      scale: 1.02,
+      transition: { duration: 0.3 },
+    },
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FDFAF4] via-[#F9F4ED] to-[#F5EFE6] dark:from-[#0F0A05] dark:via-[#1A1208] dark:to-[#231608] transition-colors duration-300">
-      {/* Hero Banner */}
-      <div className="relative h-screen flex items-center justify-center overflow-hidden">
+    <div className="min-h-screen bg-[#FDFAF4] dark:bg-[#0F0A05] overflow-hidden">
+      {/* Hero Section */}
+      <div className="relative h-screen flex items-center justify-center">
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${HERO_IMAGE})` }}
         >
-          <div className="absolute inset-0 bg-black/50 dark:bg-black/70"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/80" />
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm mb-6">
-            <BookOpen className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4">
+        <motion.div
+          className="relative z-10 text-center px-6 max-w-5xl mx-auto"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          <motion.div
+            variants={itemVariants}
+            className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8"
+          >
+            <BookOpen className="w-12 h-12 text-white" />
+          </motion.div>
+
+          <motion.h1
+            variants={itemVariants}
+            className="text-6xl md:text-7xl lg:text-8xl font-bold text-white tracking-tighter mb-6"
+          >
             Book for You
-          </h1>
-          <p className="text-xl sm:text-2xl text-white/90 mb-8">
-            Your personal library, curated just for you.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate('/user/home')}
-              className="px-8 py-3 bg-[#8B5E3C] hover:bg-[#6B3F22] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-2 group"
+          </motion.h1>
+
+          <motion.p
+            variants={itemVariants}
+            className="text-2xl text-white/90 mb-10 max-w-2xl mx-auto"
+          >
+            Your personal sanctuary for timeless stories and endless
+            discoveries.
+          </motion.p>
+
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setOpenAuth();
+                navigate('/user/home');
+              }}
+              className="group px-10 py-4 bg-[#8B5E3C] hover:bg-[#6B3F22] text-white font-semibold text-lg rounded-2xl flex items-center justify-center gap-3 shadow-xl"
             >
-              <span>Explore Home</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
+              Start Exploring
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/login')}
-              className="px-8 py-3 border border-white/30 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+              className="px-10 py-4 border-2 border-white/40 hover:border-white bg-white/10 backdrop-blur-md text-white font-semibold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all"
             >
-              <LogIn className="w-4 h-4" />
-              <span>Sign In</span>
-            </button>
-          </div>
-        </div>
+              <LogIn className="w-5 h-5" />
+              Sign In
+            </motion.button>
+          </motion.div>
+        </motion.div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
-            <div className="w-1 h-2 bg-white rounded-full mt-2"></div>
+        <motion.div
+          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <div className="w-6 h-10 border-2 border-white/70 rounded-full flex justify-center pt-2">
+            <div className="w-1 h-2 bg-white rounded-full" />
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Introduction Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-24">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-4">
-            Welcome to Your Reading Journey
-          </h2>
-          <p className="text-lg text-[#A0856A] dark:text-[#8A6A4A] max-w-3xl mx-auto">
-            Discover, read, and organize your favorite books. Whether you're a
-            casual reader or a dedicated bookworm, Book for You helps you track
-            your reading progress and explore new worlds.
-          </p>
+      {/* Features Section */}
+      <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
+        <div className="text-center mb-16">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-6"
+          >
+            Everything you need to love reading again
+          </motion.h2>
         </div>
 
-        {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#8B5E3C] to-[#C9A87C] flex items-center justify-center mx-auto mb-4">
-              <Library className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-2">
-              Extensive Library
-            </h3>
-            <p className="text-[#A0856A] dark:text-[#8A6A4A]">
-              Access thousands of books across genres, from classics to modern
-              bestsellers.
-            </p>
-          </div>
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
+          {[
+            {
+              icon: <Library className="w-9 h-9" />,
+              title: 'Vast Collection',
+              desc: 'Thousands of free classic books, fiction, science, philosophy, and more.',
+            },
+            {
+              icon: <TrendingUp className="w-9 h-9" />,
+              title: 'Track Your Journey',
+              desc: 'Keep progress, set reading goals, and celebrate every book you finish.',
+            },
+            {
+              icon: <Heart className="w-9 h-9" />,
+              title: 'Made for You',
+              desc: 'Personal recommendations and a beautiful reading experience.',
+            },
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              variants={cardVariants}
+              whileHover="hover"
+              className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-3xl p-10 text-center group"
+            >
+              <div className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-[#8B5E3C] to-[#C9A87C] flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                {feature.icon}
+              </div>
+              <h3 className="text-2xl font-semibold text-[#2C1A0E] dark:text-[#F0E6D3] mb-4">
+                {feature.title}
+              </h3>
+              <p className="text-[#A0856A] dark:text-[#8A6A4A] leading-relaxed">
+                {feature.desc}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
 
-          <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#8B5E3C] to-[#C9A87C] flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-2">
-              Track Progress
-            </h3>
-            <p className="text-[#A0856A] dark:text-[#8A6A4A]">
-              Log your reading, set goals, and celebrate your achievements with
-              detailed insights.
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-[#231608] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#8B5E3C] to-[#C9A87C] flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-2">
-              Personalized Experience
-            </h3>
-            <p className="text-[#A0856A] dark:text-[#8A6A4A]">
-              Get recommendations based on your taste and discover hidden gems
-              you'll love.
-            </p>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-16 text-center">
+        {/* Final CTA */}
+        <motion.div
+          className="mt-20 text-center"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
           <button
             onClick={() => navigate('/register')}
-            className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B5E3C] hover:bg-[#6B3F22] text-white font-semibold rounded-xl transition-all duration-200 shadow-md"
+            className="px-12 py-5 bg-[#8B5E3C] hover:bg-[#6B3F22] text-white text-xl font-semibold rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl"
           >
-            Get Started for Free
-            <ArrowRight className="w-4 h-4" />
+            Join Free — Start Reading Today
           </button>
-          <p className="text-sm text-[#A0856A] dark:text-[#8A6A4A] mt-4">
-            Join thousands of readers already enjoying Book for You
+          <p className="mt-4 text-[#A0856A] dark:text-[#8A6A4A]">
+            No credit card required • Instant access
           </p>
-        </div>
+        </motion.div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-[#DDD0B8] dark:border-[#4A3520] py-6 text-center text-sm text-[#A0856A] dark:text-[#8A6A4A]">
-        <div className="max-w-7xl mx-auto px-4">
-          <p>© {new Date().getFullYear()} Book for You. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }

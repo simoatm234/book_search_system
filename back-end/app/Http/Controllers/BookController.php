@@ -40,6 +40,7 @@ public function __construct(BooksService $booksService)
      */
     public function show(book $book)
     {
+        $book->load('files');
         return   response()->json([
             'success' => true,
             'message' => ' book retrived successfuly',
@@ -65,14 +66,56 @@ public function __construct(BooksService $booksService)
 
 
     // Simple version - returns all books with all fields
-    public function booksBySubject(Request $request)
+    public function booksOrSubjects(Request $request)
     {
-        $validate = $request->validate(['subject' => 'required|string|min:1']);
+        $subject = $request->input('subject');
+        $limit = (int) $request->input('limit', 12); 
+
+        // If no subject parameter, return all subjects with limited books per subject
+        if (is_null($subject)) {
+            $booksBySubject = [];
+            $subjectCounts = []; // track how many books per subject we've added
+
+            Book::with('files')->chunk(1000, function ($books) use (&$booksBySubject, &$subjectCounts, $limit) {
+                foreach ($books as $book) {
+                    $subjects = $book->subjects;
+
+                    // Normalize to array
+                    if (is_string($subjects)) {
+                        $decoded = json_decode($subjects, true);
+                        $subjects = is_array($decoded) ? $decoded : [$subjects];
+                    }
+
+                    if (is_array($subjects)) {
+                        foreach ($subjects as $subjectName) {
+                            if (empty($subjectName)) continue;
+
+                            // Skip if we already have enough books for this subject
+                            if (($subjectCounts[$subjectName] ?? 0) >= $limit) {
+                                continue;
+                            }
+
+                            // Add the book and increment the count
+                            $booksBySubject[$subjectName][] = $book;
+                            $subjectCounts[$subjectName] = ($subjectCounts[$subjectName] ?? 0) + 1;
+                        }
+                    }
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'subjects' => $booksBySubject
+            ]);
+        }
+
+        // Subject provided: return paginated books for that subject
+        $validated = $request->validate(['subject' => 'required|string|min:1']);
 
         try {
-            $books = Book::whereJsonContains('subjects', $validate['subject'])
+            $books = Book::whereJsonContains('subjects', $validated['subject'])
                 ->with('files')
-                ->paginate(20);
+                ->paginate(12);
 
             if ($books->isEmpty()) {
                 return response()->json([
@@ -95,34 +138,7 @@ public function __construct(BooksService $booksService)
         }
     }
 
-    public function getAllSubjects()
-    {
-        $allSubjects = [];
-
-        Book::chunk(1000, function ($books) use (&$allSubjects) {
-            foreach ($books as $book) {
-                $subjects = $book->subjects;
-
-                // If it's a string, try to decode as JSON, otherwise treat as single subject
-                if (is_string($subjects)) {
-                    $decoded = json_decode($subjects, true);
-                    if (is_array($decoded)) {
-                        $subjects = $decoded;
-                    } else {
-                        $subjects = [$subjects]; // convert single subject to array
-                    }
-                }
-
-                if (is_array($subjects)) {
-                    foreach ($subjects as $subject) {
-                        if ($subject && !in_array($subject, $allSubjects)) {
-                            $allSubjects[] = $subject;
-                        }
-                    }
-                }
-            }
-        });
-
-        return response()->json(['subjects' => $allSubjects]);
+    public function searchWithSubject()  {
+        
     }
 }

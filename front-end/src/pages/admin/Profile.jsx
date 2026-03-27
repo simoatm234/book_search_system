@@ -105,10 +105,14 @@ export default function Profile() {
           message: res?.payload.message,
           type: 'success',
         });
-        return res;
+      } else {
+        showMessage({
+          message: res?.payload,
+          type: 'error',
+        });
       }
     } catch (error) {
-      console.error('Update password error:', error);
+   
       showMessage({
         message:
           error?.response?.data?.message ||

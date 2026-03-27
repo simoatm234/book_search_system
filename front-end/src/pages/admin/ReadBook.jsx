@@ -1,75 +1,64 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBook } from '../../Services/App/slice/Dispatches/BookDispatch';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
-import { BookOpen, Loader2, ArrowLeft } from 'lucide-react';
+import { BookOpen, Loader2, ArrowLeft, Download } from 'lucide-react';
 import { Api } from '../../Services/App/Api';
+import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
 
 export default function ReadBook() {
-  const { book, books, loading } = useSelector((state) => state.books);
-  const { readBook, allBooks } = useBook();
+  const { book, loading } = useSelector((state) => state.books);
+  const { getBookInfo, getFileAndCober, DownloadBook } = useGlobalFunction();
   const { showMessage } = useNotif();
   const { bookId } = useParams();
   const navigate = useNavigate();
-
   const [readUrl, setReadUrl] = useState(null);
-  console.log(book);
 
-  // 🔹 Load book
+  // Load book if not in store
   useEffect(() => {
-    const fetchData = async () => {
-      if (books.length === 0) {
-        await allBooks();
+    if (!book || book.id !== parseInt(bookId)) {
+      getBookInfo(bookId); // async, will populate store
+    }
+  }, [book, bookId, getBookInfo]);
+
+  // Compute coverUrl and fileUrl from the current book (once available)
+  const { coverUrl, fileUrl } = useMemo(() => {
+    if (!book) return { coverUrl: null, fileUrl: null };
+    return getFileAndCober(book);
+  }, [book, getFileAndCober]);
+
+  // Track read action and obtain the read URL
+  useEffect(() => {
+    const trackRead = async () => {
+      if (!book?.id || readUrl) return;
+      try {
+        const res = await Api.setUserBookRead(book.id);
+        if (!res.data.success) {
+          showMessage({
+            message: res.data.message || 'Failed to open book',
+            type: 'error',
+          });
+          navigate(-1);
+          return;
+        }
+        setReadUrl(res.data.data.read_url);
+      } catch (error) {
+        showMessage({
+          message: error?.response?.data?.message || 'Something went wrong',
+          type: 'error',
+        });
       }
-      await readBook({ id: bookId });
     };
+    trackRead();
+  }, [book, readUrl, showMessage, navigate]);
 
-    fetchData();
-  }, [bookId]);
-
-  // 🔹 Get extension
+  // Helper to get file extension
   const getExtension = (path) => {
     return path?.split('.').pop().toLowerCase();
   };
 
-  // 🔹 Track read + get URL
-  const openBook = async () => {
-    try {
-      const res = await Api.setUserBookRead(book.id);
-      console.log(res);
-      if (!res.data.success) {
-        showMessage({
-          message: res.data.message || 'Failed to open book',
-          type: 'error',
-        });
-        navigate(-1);
-        return;
-      }
-
-      setReadUrl(res.data.data.read_url);
-    } catch (error) {
-      showMessage({
-        message: error?.response?.data?.message || 'Something went wrong',
-        type: 'error',
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (book?.id && !readUrl) {
-      openBook();
-    }
-  }, [book]);
-
-  // 🔹 Cover
-  const baseUrl = import.meta.env.VITE_BACK_END_URL_FILES;
-  const coverUrl = book?.files?.cover_path
-    ? `${baseUrl}storage/${book.files.cover_path}`
-    : null;
-  console.log('cov : ', coverUrl);
-  const extension = getExtension(book?.files?.file_path || '');
-  console.log('ex : ', extension);
+  const extension = getExtension(fileUrl);
 
   if (loading) {
     return (
@@ -96,7 +85,6 @@ export default function ReadBook() {
             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#EDE4D3] dark:bg-[#2C1F10] border border-[#C9A87C]">
               <BookOpen className="text-[#8B5E3C] w-5 h-5" />
             </div>
-
             <div>
               <h1 className="text-lg font-bold text-[#2C1A0E] dark:text-[#F0E6D3]">
                 {book.title}
@@ -141,9 +129,20 @@ export default function ReadBook() {
                 : 'Unknown Author'}
             </p>
 
-            <p className="text-xs text-[#8B5E3C]">
+            <p className="text-xs text-[#8B5E3C] mb-4">
               Format: {extension?.toUpperCase()}
             </p>
+
+            {/* Download button */}
+            <button
+              onClick={() =>
+                DownloadBook(book.id, `${book.title}.${extension}`)
+              }
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#8B5E3C] text-white hover:bg-[#6F4A2E] transition-colors"
+            >
+              <Download size={16} />
+              Download
+            </button>
           </div>
 
           {/* RIGHT SIDE (READER) */}
@@ -161,7 +160,6 @@ export default function ReadBook() {
                     title="PDF Reader"
                   />
                 )}
-
                 {extension === 'epub' && (
                   <iframe
                     src={readUrl}
@@ -169,13 +167,17 @@ export default function ReadBook() {
                     title="EPUB Reader"
                   />
                 )}
-
                 {extension === 'txt' && (
                   <iframe
                     src={readUrl}
                     className="w-full h-[80vh]"
                     title="TXT Reader"
                   />
+                )}
+                {!['pdf', 'epub', 'txt'].includes(extension) && (
+                  <div className="p-6 text-center text-[#A0856A]">
+                    Unsupported file format for inline reading.
+                  </div>
                 )}
               </>
             )}

@@ -74,7 +74,7 @@ export const updateUserPass = createAsyncThunk(
   'users/updatePass',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await Api.updateUserPass({ id, data });
+      const response = await Api.updatePass({ id, data });
       return response.data;
     } catch (error) {
       return rejectWithValue(

@@ -11,7 +11,7 @@ export const Api = {
   storeUser: async (data) => await customAxios.post('user/store', data),
   updateUser: async ({ id, data }) =>
     await customAxios.put(`user/update/${id}`, data),
-  updateUserPass: async ({ id, data }) =>
+  updatePass: async ({ id, data }) =>
     await customAxios.put(`user/updatePass/${id}`, data),
   forcDeleteUser: async (id) =>
     await customAxios.delete(`user/forceDelete/${id}`),
@@ -43,16 +43,16 @@ export const Api = {
   resetPassword: async (data) =>
     await customAxios.post('user/reset-password', data),
   // books
-  allBooks: async () => await customAxios.get('books/all'),
-  getAllSubject: async () => await customAxios.get('books/getAllSubjects'),
-  getBySubject: async (subject) =>
-    await customAxios.get('books/categorys', subject),
+  allBooks: async (page) =>
+    await customAxios.get('books/all', { params: { page } }),
+  getBookBySubject: async ({ subject, page }) =>
+    await customAxios.get('books/subject', { params: { subject, page } }),
   showBook: async (bookId) => customAxios.get(`books/show/${bookId}`),
   showBookFile: async (bookFileId) =>
     await customAxios.get(`booksFiles/show/${bookFileId}`),
   getBookCover: async (filename) =>
     await customAxios.get(`booksFiles/cover/${filename}`),
-  getBookCategory: async () => await customAxios.get('books/all/categorys'),
+  getAllBooksWithSubjects: async () => await customAxios.get('books/subjects'),
   getAllUserBooks: () => customAxios.get('books/user-books'),
   setUserBookRead: (book_Id) =>
     customAxios.post(`books/user-books/track-read/${book_Id}`),

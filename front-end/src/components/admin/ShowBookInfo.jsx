@@ -10,6 +10,8 @@ import {
   FileText,
   BookOpen,
 } from 'lucide-react';
+import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
+import { useBook } from '../../Services/App/slice/Dispatches/BookDispatch';
 
 export default function ShowBookInfo({
   bookId,
@@ -17,15 +19,22 @@ export default function ShowBookInfo({
   handleDownloadFile,
   handelReadBook,
 }) {
-  const { books } = useSelector((state) => state.books);
-  const [book, setBook] = useState(null);
+  const { book } = useSelector((state) => state.books);
+  
+  const { getFileAndCober  ,getBookInfo} = useGlobalFunction();
+  const [coverUrl, setCoverUrl] = useState(null);
+  const [fileUrl, setFileUrl] = useState(null);
 
   useEffect(() => {
-    const foundBook = books?.find((b) => b.id === bookId);
-    if (foundBook) {
-      setBook(foundBook);
-    }
-  }, [bookId, books]);
+    const fetch = async () => {
+      getBookInfo(bookId);
+      console.log(book)
+      const { coverUrl, fileUrl } = await getFileAndCober(book);
+      setCoverUrl(coverUrl);
+      setFileUrl(fileUrl);
+    };
+    fetch();
+  }, []);
 
   const handleCloseBook = () => {
     setCloseBook(false);
@@ -34,18 +43,6 @@ export default function ShowBookInfo({
   if (!book) {
     return null;
   }
-
-  const hasFiles = book.files || book.files > 0;
-  const bookFile = hasFiles ? book.files : null;
-  const baseUrl = import.meta.env.VITE_BACK_END_URL_IMAGE;
-  console.log('book file: ',bookFile)
-  const coverUrl = bookFile?.cover_path
-    ? `${baseUrl}storage/${bookFile.cover_path}`
-    : book.formats?.['image/jpeg'];
-
-  const fileUrl = bookFile?.file_path
-    ? `${baseUrl}storage/${bookFile.file_path}`
-    : null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -94,7 +91,7 @@ export default function ShowBookInfo({
                     onClick={() =>
                       handleDownloadFile(
                         book.id,
-                        `${book.title}.${bookFile.file_format}`
+                        `${book.title}.${book.files.file_format}`
                       )
                     }
                     className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#8B5E3C] dark:bg-[#C9A87C] hover:bg-[#6B3F22] dark:hover:bg-[#B08B5A] text-white dark:text-[#1A1208] font-medium rounded-lg transition"
@@ -113,9 +110,9 @@ export default function ShowBookInfo({
                 <h1 className="text-2xl font-bold text-[#2C1A0E] dark:text-[#F0E6D3] mb-2">
                   {book.title}
                 </h1>
-                {hasFiles && (
+                {coverUrl && fileUrl  && (
                   <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
-                    Downloaded • {bookFile.file_format.toUpperCase()}
+                    Downloaded • {book.files.file_format.toUpperCase()}
                   </span>
                 )}
               </div>
@@ -183,14 +180,9 @@ export default function ShowBookInfo({
                       Subjects
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {book.subjects.map((subject, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-[#F4F0E6] dark:bg-[#1A1208] text-[#A0856A] dark:text-[#8A6A4A] text-xs rounded border border-[#DDD0B8] dark:border-[#4A3520]"
-                        >
-                          {subject}
-                        </span>
-                      ))}
+                      <span className="px-2 py-1 bg-[#F4F0E6] dark:bg-[#1A1208] text-[#A0856A] dark:text-[#8A6A4A] text-xs rounded border border-[#DDD0B8] dark:border-[#4A3520]">
+                        {book.subjects}
+                      </span>
                     </div>
                   </div>
                 </div>

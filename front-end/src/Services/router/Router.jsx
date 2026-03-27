@@ -18,6 +18,9 @@ import Actions from '../../pages/admin/Actions';
 import AllBooks from '../../pages/admin/AllBooks';
 import AllUserBook from '../../pages/admin/AllUserBook';
 import ReadBook from '../../pages/admin/ReadBook';
+import BookSubject from '../../pages/user/BookSubject';
+import UserProfile from '../../pages/user/UserProfile';
+import Setting from '../../pages/user/Setting';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -46,7 +49,7 @@ export const router = createBrowserRouter([
         element: <AllBooks />,
       },
       {
-        path: 'books/read/:bookId',
+        path: 'books/:bookId/read',
         element: <ReadBook />,
       },
       {
@@ -63,6 +66,18 @@ export const router = createBrowserRouter([
       {
         path: 'home',
         element: <Home />,
+      },
+      {
+        path: 'profile',
+        element: <UserProfile />,
+      },
+      {
+        path: 'settings',
+        element: <Setting />,
+      },
+      {
+        path: 'books/:subject/subject',
+        element: <BookSubject />,
       },
     ],
   },
@@ -96,7 +111,7 @@ export const router = createBrowserRouter([
     element: <ConfirmeCode />,
   },
   {
-    path: '//reset-password',
+    path: '/reset-password',
     element: <ResetPassword />,
   },
 ]);

@@ -22,27 +22,7 @@ class authUserController extends Controller
         $this->user_actions  = $user_actions;
     }
 
-    // public function me(Request $request)
-    // {
-    //     try {
-    //         $user = $request->user();
 
-    //         if (!$user) {
-    //             return response()->json([
-    //                 'message' => 'User not authenticated'
-    //             ], 401);
-    //         }
-
-    //         return response()->json([
-    //             'user' => $user
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'message' => 'Failed to fetch user',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     public function login(LoginRequest $request)  {
         try {

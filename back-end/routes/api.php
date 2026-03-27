@@ -28,10 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/actions', [UserActionsController::class, 'index']);
     });
         Route::prefix('books')->group(function () {
-            // Route::get('/all' , [BookController::class , 'index']);
-            Route::get('/show/{book}' , [BookController::class , 'show']);
 
-            
+
+
         Route::get('/user-books', [UserBookController::class, 'index']);
 
         // // Get my books
@@ -69,6 +68,10 @@ Route::prefix('/user')->group(function (){
 //     ->where('type', 'cover|file')
 //     ->name('booksFiles.getFile');
 
-Route::get('books/all', [BookController::class, 'index']);
-Route::get('books/categorys', [BookController::class, 'booksBySubject']);
-Route::get('books/getAllSubjects', [BookController::class, 'getAllSubjects']);
+Route::prefix('books')->group(function () {
+
+    Route::get('/all', [BookController::class, 'index']);
+    Route::get('/show/{book}', [BookController::class, 'show']);
+    Route::get('/subjects', [BookController::class, 'booksOrSubjects']);   
+    Route::get('/subject', [BookController::class, 'booksOrSubjects']);
+});

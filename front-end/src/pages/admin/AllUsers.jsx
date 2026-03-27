@@ -75,7 +75,7 @@ export default function AllUsers() {
 
   const confirmAccount = async (id) => {
     try {
-      const data = { confirmed: 1 }; // Send as 1/0 for backend
+      const data = { confirmed: 1 }; 
       const res = await UpdateUser({ id, data });
       if (res?.payload?.success) {
         showMessage({

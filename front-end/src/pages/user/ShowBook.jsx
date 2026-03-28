@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
@@ -21,7 +21,7 @@ import {
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
 import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
 
-// Animation variants
+// Animation variants (same as before)
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -50,20 +50,65 @@ const imageVariants = {
 export default function ShowBook() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+
+  // Redux state
   const { book, loading } = useSelector((state) => state.books);
   const { user, token, isAuth } = useSelector((state) => state.auth);
+  const { mySaves } = useSelector((state) => state.save);
+
+  // Hooks
   const { showMessage } = useNotif();
-  const { addToMyBooks, DownloadBook, getFileAndCober, getBookInfo } =
+  const { removeSave, AddSave, DownloadBook, getFileAndCober, getBookInfo } =
     useGlobalFunction();
 
+  // Local state
   const [activeTab, setActiveTab] = useState('summary');
-  const [isAdded, setIsAdded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const isAuthenticated = !!user && !!token && isAuth;
 
+  // Determine if the current book is already saved and get its saved record id
+  const savedRecord = mySaves?.find(
+    (saved) => saved.book_id == parseInt(bookId)
+  );
+  const isSaved = !!savedRecord;
+  const savedId = savedRecord?.id;
+
+  // Fetch book details when bookId changes
   useEffect(() => {
-    getBookInfo(bookId);
+    if (bookId) {
+      getBookInfo(bookId);
+    }
   }, []);
+
+  // Toggle save/unsave
+  const handleSaveToggle = async () => {
+    if (!isAuthenticated) {
+      showMessage({
+        message: 'Please log in to save books.',
+        type: 'error',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (isSaved && savedId) {
+       
+        // Remove
+        await removeSave(savedRecord.id);
+      } else {
+        await AddSave({ book_id: book.id });
+      }
+    } catch (error) {
+      showMessage({
+        message: error?.message || 'Failed to update saved books.',
+        type: 'error',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleDownload = async () => {
     if (!isAuthenticated) {
@@ -87,29 +132,6 @@ export default function ShowBook() {
     );
   };
 
-  const handleAddToMyBooks = async () => {
-    if (!isAuthenticated) {
-      showMessage({
-        message: 'Please log in to save books.',
-        type: 'error',
-      });
-      return;
-    }
-    try {
-      await addToMyBooks(book.id);
-      setIsAdded(true);
-      showMessage({
-        message: 'Book added to your library!',
-        type: 'success',
-      });
-    } catch (error) {
-      showMessage({
-        message: error?.message || 'Failed to add book.',
-        type: 'error',
-      });
-    }
-  };
-
   const handleRead = () => {
     if (!isAuthenticated) {
       showMessage({
@@ -121,6 +143,7 @@ export default function ShowBook() {
     navigate(`/user/books/${book.id}/read`);
   };
 
+  // Loading and error states
   if (loading && !book) {
     return (
       <div className="min-h-screen bg-[#F4F0E6] dark:bg-[#1A1208] flex items-center justify-center">
@@ -242,18 +265,27 @@ export default function ShowBook() {
                 <Download size={18} /> Download
               </button>
               <button
-                onClick={handleAddToMyBooks}
-                disabled={!isAuthenticated || isAdded}
+                onClick={handleSaveToggle}
+                disabled={!isAuthenticated || isSaving}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  isAuthenticated && !isAdded
-                    ? 'bg-[#EDE4D3] text-[#2C1A0E] hover:bg-[#E0D5C0] shadow-sm'
-                    : isAdded
-                      ? 'bg-green-100 text-green-700 cursor-default'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  isAuthenticated && !isSaving
+                    ? isSaved
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200 shadow-sm'
+                      : 'bg-[#EDE4D3] text-[#2C1A0E] hover:bg-[#E0D5C0] shadow-sm'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {isAdded ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-                {isAdded ? 'Added' : 'Add to My Books'}
+                {isSaving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : isSaved ? (
+                  <>
+                    <BookmarkCheck size={18} /> Saved
+                  </>
+                ) : (
+                  <>
+                    <Bookmark size={18} /> Add to My Books
+                  </>
+                )}
               </button>
             </div>
           </motion.div>

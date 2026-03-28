@@ -1,4 +1,3 @@
-import { useSelector } from 'react-redux';
 import { Api } from '../../Api';
 import { useBook } from '../Dispatches/BookDispatch';
 import { useNotif } from '../Dispatches/NotifDispatch';
@@ -14,7 +13,6 @@ export const useGlobalFunction = () => {
   const getBookInfo = async (bookId) => {
     try {
       const res = await getBook(bookId);
-      console.log(res);
       if (res.payload.success) {
         showMessage({
           message: 'book retrived ',
@@ -73,9 +71,7 @@ export const useGlobalFunction = () => {
       });
     }
   };
-  const addToMyBooks = (bookId) => {
-    console.log(bookId);
-  };
+ 
   const AddSave = async (data) => {
     try {
       const res = await storeSave(data);
@@ -102,7 +98,7 @@ export const useGlobalFunction = () => {
       const res = await deleteSave(saveId);
       if (res.payload.success) {
         showMessage({
-          message: 'book add successfuly ',
+          message: 'book removed successfuly ',
           type: 'success',
         });
       } else {
@@ -123,7 +119,6 @@ export const useGlobalFunction = () => {
     getFileAndCober,
     DownloadBook,
     getBookInfo,
-    addToMyBooks,
     AddSave,
     removeSave,
   };

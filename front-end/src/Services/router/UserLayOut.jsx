@@ -10,21 +10,24 @@ import { useAuth } from '../App/slice/Dispatches/AuthDispatch';
 import LoadingUser from '../../components/user/LoadingUser';
 import { Api } from '../App/Api';
 import Notification from '../../components/Notification';
+import { useSave } from '../App/slice/Dispatches/SaveDispatch';
 
 export default function UserLayOut() {
   const { showMessage } = useNotif();
   const { setOpenAuth, showUser, logout } = useAuth();
+  const { fetchMySaves } = useSave();
   const { OpenAuth, token, userId, isAuth, loading } = useSelector(
     (state) => state.auth
   );
   const navigate = useNavigate();
+
   useEffect(() => {
     let isMounted = true;
     const fetch = async () => {
       try {
-        // get user auth
         if (token && userId && isAuth) {
           await showUser(userId);
+          await fetchMySaves();
         } else {
           setOpenAuth();
           logout();
@@ -32,7 +35,7 @@ export default function UserLayOut() {
       } catch (error) {
         if (isMounted) {
           showMessage({
-            message: error?.message || 'Failed to load books',
+            message: error?.message || 'Failed to load user data',
             type: 'error',
           });
         }
@@ -43,37 +46,38 @@ export default function UserLayOut() {
       isMounted = false;
     };
   }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!OpenAuth && !token && !isAuth && !userId) {
         setOpenAuth(true);
       }
-    }, 600000);
-
+    }, 600000); // 10 minutes
     return () => clearTimeout(timer);
-  }, []);
+  }, [OpenAuth]);
 
   const onLogout = async () => {
     try {
-      if (confirm('are you shur')) {
+      if (window.confirm('Are you sure you want to log out?')) {
         const res = await Api.logout(userId);
-        if (res.status == 200 || res.status == 201) {
+        if (res.status === 200 || res.status === 201) {
           logout();
           navigate('/login');
         }
       }
-      return;
     } catch (error) {
-      console.error(' logout failed :', error);
+      console.error('Logout failed:', error);
     }
   };
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col bg-[#F4F0E6] dark:bg-[#1A1208] transition-colors duration-300">
       <NavBar onLogout={onLogout} />
-      <Outlet />
+      <main className="flex-grow">
+        <Outlet />
+      </main>
       <Footer />
-       <Notification />
+      <Notification />
       {OpenAuth && <AuthUser />}
       {loading && <LoadingUser />}
     </div>

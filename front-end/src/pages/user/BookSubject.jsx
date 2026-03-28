@@ -3,22 +3,17 @@ import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBook } from '../../Services/App/slice/Dispatches/BookDispatch';
 import { useNotif } from '../../Services/App/slice/Dispatches/NotifDispatch';
-import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
-import { Eye, BookOpen, Download, Bookmark, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
+import Card from '../../components/user/Card';
 
 export default function BookSubject() {
   const { subject } = useParams();
   const { bookBySubject, loading } = useSelector((state) => state.books);
-  const { user, token, isAuth } = useSelector((state) => state.auth);
   const { showMessage } = useNotif();
   const { getbookBySubject } = useBook();
-  const { getFileAndCober, DownloadBook, addToMyBooks } = useGlobalFunction();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('all');
-  const navigate = useNavigate();
-
-  const isAuthenticated = !!user && !!token && isAuth;
 
   useEffect(() => {
     const fetch = async () => {
@@ -36,11 +31,12 @@ export default function BookSubject() {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (bookBySubject?.last_page || 1)) {
+      getbookBySubject({ subject, page: newPage });
       setCurrentPage(newPage);
     }
   };
 
-  // No filtering logic – search and select do nothing
+  // Search handlers (client-side filtering – implement as needed)
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     // TODO: add search logic here
@@ -81,9 +77,7 @@ export default function BookSubject() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold capitalize">{subject}</h1>
 
-        {/* Search section */}
         <div className="flex gap-2">
-          {/* Search field dropdown */}
           <select
             value={searchField}
             onChange={handleSearchFieldChange}
@@ -95,7 +89,6 @@ export default function BookSubject() {
             <option value="subject">Subject</option>
           </select>
 
-          {/* Search input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0856A]" />
             <input
@@ -107,7 +100,6 @@ export default function BookSubject() {
             />
           </div>
 
-          {/* Clear button */}
           {searchTerm && (
             <button
               onClick={clearSearch}
@@ -121,104 +113,9 @@ export default function BookSubject() {
 
       {/* Books Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {books.map((book) => {
-          const { coverUrl, fileUrl } = getFileAndCober(book);
-          const hasFile = !!book.files;
-          return (
-            <div
-              key={book.id}
-              className="bg-white dark:bg-[#1A110A] border border-[#DDD0B8] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col"
-            >
-              {/* Cover */}
-              <div className="relative h-64 bg-[#F3EFE7] overflow-hidden">
-                <img
-                  src={
-                    coverUrl ||
-                    'https://via.placeholder.com/150x200?text=No+Cover'
-                  }
-                  alt={book.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-
-              {/* Content */}
-              <div className="p-4 flex flex-col flex-grow">
-                <h3 className="font-bold text-lg text-[#2C1A0E] dark:text-[#F0E6D3] line-clamp-2 mb-1">
-                  {book.title}
-                </h3>
-                <p className="text-sm text-[#A0856A] mb-2">
-                  {book.authors?.join(', ') || 'Anonymous'}
-                </p>
-
-                {/* Stats */}
-                <div className="flex gap-3 text-xs text-[#A0856A] mb-3">
-                  {book.download_count > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Download size={12} /> {book.download_count}
-                    </span>
-                  )}
-                  {book.reading_count > 0 && (
-                    <span className="flex items-center gap-1">
-                      <BookOpen size={12} /> {book.reading_count}
-                    </span>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="mt-auto space-y-2">
-                  <button
-                    onClick={() => {
-                      /* navigate to details */
-                    }}
-                    className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg bg-[#EDE4D3] text-[#2C1A0E] hover:bg-[#E0D5C0] transition"
-                  >
-                    <Eye size={16} /> Details
-                  </button>
-                  <div className="flex gap-2">
-                    <button
-                      disabled={!isAuthenticated}
-                      onClick={() => navigate(`/user/books/${book.id}/read`)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition ${
-                        isAuthenticated
-                          ? 'bg-[#2C1A0E] text-white hover:bg-black'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <BookOpen size={14} /> Read
-                    </button>
-                    <button
-                      disabled={!isAuthenticated || !hasFile}
-                      onClick={() =>
-                        DownloadBook(
-                          book.id,
-                          `${book.title}.${book.files?.file_format || 'txt'}`
-                        )
-                      }
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition ${
-                        isAuthenticated && hasFile
-                          ? 'bg-[#8B5E3C] text-white hover:bg-[#6F4B30]'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <Download size={14} /> Get
-                    </button>
-                    <button
-                      disabled={!isAuthenticated}
-                      onClick={() => addToMyBooks(book.id)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition ${
-                        isAuthenticated
-                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <Bookmark size={14} /> Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {books.map((book) => (
+          <Card key={book.id} book={book} />
+        ))}
       </div>
 
       {/* Pagination Controls */}

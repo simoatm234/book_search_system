@@ -1,23 +1,9 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  BookOpen,
-  Download,
-  Info,
-  Bookmark,
-} from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { useGlobalFunction } from '../../Services/App/slice/auther functions/GloalFunctions';
-import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import Card from './Card';
 
 export default function MapBooks({ booksData }) {
-  const { user, token, isAuth } = useSelector((state) => state.auth);
-  const isAuthenticated = !!user && !!token && isAuth;
-  const { getFileAndCober, addToMyBooks, DownloadBook } = useGlobalFunction();
-  const navigate = useNavigate();
   const books = Array.isArray(booksData) ? booksData : booksData?.data || [];
   const isLoading =
     !booksData || (booksData && !booksData.data && !Array.isArray(booksData));
@@ -32,11 +18,6 @@ export default function MapBooks({ booksData }) {
         behavior: 'smooth',
       });
     }
-  };
-
-  const getCoverUrl = (book) => {
-    const { coverUrl } = getFileAndCober(book);
-    return coverUrl;
   };
 
   const containerVariants = {
@@ -112,91 +93,9 @@ export default function MapBooks({ booksData }) {
             key={book.id}
             variants={cardVariants}
             whileHover="hover"
-            className="group min-w-[240px] max-w-[240px] flex flex-col rounded-2xl bg-white dark:bg-[#1A110A] border border-[#DDD0B8]/50 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-15px_rgba(139,94,60,0.3)] transition-all duration-500 snap-start overflow-hidden"
+            className="min-w-[240px] max-w-[240px] snap-start"
           >
-            {/* Cover Area */}
-            <div className="relative h-72 overflow-hidden bg-[#F3EFE7]">
-              <img
-                src={getCoverUrl(book)}
-                alt={book.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-
-              {book.page_count && (
-                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg border border-white/20">
-                  {book.page_count} PAGES
-                </div>
-              )}
-
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1A110A] via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-300" />
-            </div>
-
-            {/* Details Area */}
-            <div className="p-5 flex flex-col flex-grow">
-              <h3 className="font-bold text-base leading-tight line-clamp-2 text-[#2C1A0E] dark:text-[#F0E6D3] mb-1 group-hover:text-[#8B5E3C] transition-colors">
-                {book.title}
-              </h3>
-
-              <p className="text-xs font-medium text-[#A0856A] mb-4">
-                {book.authors?.join(', ') || 'Anonymous'}
-              </p>
-
-              {/* Action Buttons */}
-              <div className="mt-auto space-y-2">
-                <button
-                  onClick={() => navigate(`/user/books/${book.id}/show`)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-[#F3EFE7] text-[#5C3D2E] hover:bg-[#8B5E3C] hover:text-white transition-all"
-                >
-                  <Info size={14} /> Details
-                </button>
-
-                <div className="flex gap-2">
-                  {/* Read Button */}
-                  <button
-                    disabled={!isAuthenticated}
-                    onClick={() => navigate(`/user/books/${book.id}/read`)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold rounded-xl transition-all ${
-                      isAuthenticated
-                        ? 'bg-[#2C1A0E] text-[#F0E6D3] hover:bg-black shadow-md'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <BookOpen size={14} /> Read
-                  </button>
-
-                  {/* Download Button */}
-                  <button
-                    disabled={!isAuthenticated}
-                    onClick={() =>
-                      DownloadBook(
-                        book.id,
-                        `${book.title}.${book.files?.file_format || 'txt'}`
-                      )
-                    }
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold rounded-xl transition-all ${
-                      isAuthenticated
-                        ? 'bg-[#8B5E3C] text-white hover:bg-[#6F4B30] shadow-md'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <Download size={14} /> Get
-                  </button>
-
-                  {/* Add to My Books Button */}
-                  <button
-                    onClick={() => addToMyBooks(book.id)}
-                    disabled={!isAuthenticated}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold rounded-xl transition-all ${
-                      isAuthenticated
-                        ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <Bookmark size={14} /> Save
-                  </button>
-                </div>
-              </div>
-            </div>
+            <Card book={book} />
           </motion.div>
         ))}
       </motion.div>

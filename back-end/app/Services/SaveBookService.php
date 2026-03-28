@@ -23,7 +23,7 @@ class SaveBookService
      */
     public function mySaves($userId)
     {
-        return saveBooks::with('book')
+        return saveBooks::with('book.files')
             ->where('user_id', $userId)
             ->get();
     }

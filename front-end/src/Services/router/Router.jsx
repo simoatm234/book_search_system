@@ -24,6 +24,7 @@ import Setting from '../../pages/user/Setting';
 import ShowBook from '../../pages/user/ShowBook';
 import ReadBookUser from '../../pages/user/ReadBookUser';
 import MyBooks from '../../pages/user/MyBooks';
+import SearchPage from '../../pages/user/SearchPage';
 
 export const router = createBrowserRouter([
   // admin routers
@@ -93,6 +94,10 @@ export const router = createBrowserRouter([
       {
         path: 'books/myBooks',
         element: <MyBooks />,
+      },
+      {
+        path: '/user/search',
+        element: <SearchPage />,
       },
     ],
   },

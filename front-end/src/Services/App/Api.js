@@ -68,4 +68,13 @@ export const Api = {
   getSave: (saveId) => customAxios.get(`user/books/saves/${saveId}`),
   deleteSave: (saveId) => customAxios.delete(`user/books/saves/${saveId}`),
   // search
+  search: (query, type) =>
+    customAxios.get('books/search', {
+      params: { query, type }, 
+    }),
+
+  searchWithSubject: (query, type, subject) =>
+    customAxios.get('books/search-by-subject', {
+      params: { query, type, subject }, 
+    }),
 };

@@ -16,14 +16,13 @@ import { useAuth } from '../../Services/App/slice/Dispatches/AuthDispatch';
 import { useSelector } from 'react-redux';
 
 export default function NavBar({ onLogout }) {
-  const { logout, setOpenAuth } = useAuth();
-  const { isAuth, token, user } = useSelector((state) => state.auth);
+  const {  setOpenAuth } = useAuth();
+  const { isAuth,  user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const dropdownRef = useRef(null);
 
@@ -39,7 +38,14 @@ export default function NavBar({ onLogout }) {
       name: 'My Books',
       path: '/user/books/myBooks',
       icon: <Book className="w-4 h-4" />,
-      onClick: () => (isAuth ? navigate('/user/books/myBooks') : setOpenAuth(true)),
+      onClick: () =>
+        isAuth ? navigate('/user/books/myBooks') : setOpenAuth(true),
+    },
+    {
+      name: 'search Books',
+      path: '/user/search',
+      icon: <Search className="w-4 h-4" />,
+      onClick: () => (isAuth ? navigate('/user/search') : setOpenAuth(true)),
     },
   ];
 
@@ -72,13 +78,7 @@ export default function NavBar({ onLogout }) {
     onLogout();
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
+ 
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const toggleDropdown = (name) =>
@@ -124,18 +124,7 @@ export default function NavBar({ onLogout }) {
             </div>
 
             {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-8">
-              <form onSubmit={handleSearch} className="relative group">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search books by title or author..."
-                  className="w-full pl-11 pr-4 py-2.5 bg-[#F5EFE6] dark:bg-[#1A1208] border border-[#DDD0B8] dark:border-[#4A3520] rounded-2xl text-sm focus:outline-none focus:border-[#8B5E3C] dark:focus:border-[#C9A87C] placeholder-[#A0856A] transition-all"
-                />
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0856A]" />
-              </form>
-            </div>
+           
 
             {/* Auth Section */}
             <div className="flex items-center gap-3">

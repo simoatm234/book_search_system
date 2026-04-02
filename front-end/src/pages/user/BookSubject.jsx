@@ -12,8 +12,7 @@ export default function BookSubject() {
   const { showMessage } = useNotif();
   const { getbookBySubject } = useBook();
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchField, setSearchField] = useState('all');
+  
 
   useEffect(() => {
     const fetch = async () => {
@@ -34,23 +33,6 @@ export default function BookSubject() {
       getbookBySubject({ subject, page: newPage });
       setCurrentPage(newPage);
     }
-  };
-
-  // Search handlers (client-side filtering – implement as needed)
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    // TODO: add search logic here
-  };
-
-  const handleSearchFieldChange = (e) => {
-    setSearchField(e.target.value);
-    // TODO: add search logic here
-  };
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    setSearchField('all');
-    // TODO: add search logic here
   };
 
   if (loading && !bookBySubject) {
@@ -76,39 +58,6 @@ export default function BookSubject() {
       {/* Header with title and search controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold capitalize">{subject}</h1>
-
-        <div className="flex gap-2">
-          <select
-            value={searchField}
-            onChange={handleSearchFieldChange}
-            className="px-3 py-2 bg-white dark:bg-[#1A110A] border border-[#DDD0B8] rounded-lg text-sm text-[#2C1A0E] dark:text-[#F0E6D3] focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]"
-          >
-            <option value="all">All Fields</option>
-            <option value="title">Title</option>
-            <option value="author">Author</option>
-            <option value="subject">Subject</option>
-          </select>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0856A]" />
-            <input
-              type="text"
-              placeholder={`Search by ${searchField === 'all' ? 'title, author, or subject' : searchField}...`}
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-9 pr-4 py-2 w-64 bg-white dark:bg-[#1A110A] border border-[#DDD0B8] rounded-lg text-[#2C1A0E] dark:text-[#F0E6D3] placeholder:text-[#A0856A] focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]"
-            />
-          </div>
-
-          {searchTerm && (
-            <button
-              onClick={clearSearch}
-              className="px-3 py-2 text-sm text-[#A0856A] hover:text-[#8B5E3C] transition"
-            >
-              Clear
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Books Grid */}

@@ -6,6 +6,7 @@ use App\Http\Controllers\BookFilesController;
 use App\Http\Controllers\BooksSubjectController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\SaveBooksController;
+use App\Http\Controllers\SearchBookController;
 use App\Http\Controllers\UserActionsController;
 use App\Http\Controllers\UserBookController;
 use App\Http\Controllers\UserController;
@@ -66,6 +67,8 @@ Route::prefix('/user')->group(function (){
 
 Route::prefix('books')->group(function () {
     Route::get('/all', [BookController::class, 'index']);
+    Route::get('/search', [SearchBookController::class, 'search']);
+    Route::get('/search-by-subject', [SearchBookController::class, 'searchBySubjct']);
     Route::get('/show/{book}', [BookController::class, 'show']);
     Route::get('/subjects', [BookController::class, 'booksOrSubjects']);   
     Route::get('/subject', [BookController::class, 'booksOrSubjects']);

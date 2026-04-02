@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ProcessBookOCRJob;
 use App\Models\Book;
 use App\Models\book_files;
 use Illuminate\Support\Facades\Http;
@@ -54,6 +55,7 @@ class BookFilesService
                     'cover_path' => $coverPath,
                     'downloaded_at' => now(),
                 ]);
+
 
                 Log::info("✓ Downloaded: {$book->title} (Content: {$contentPath}, Cover: " . ($coverPath ?? 'none') . ")");
             } else {
